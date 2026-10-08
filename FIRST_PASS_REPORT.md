@@ -255,3 +255,27 @@ and fits the frame to its content. No native popup menu is needed for these opti
 Generated files and model caches are ignored. Both validation and narrated-site
 workflows run on pushes to main; the narrated build deploys through GitHub Pages.
 Workflow run outcomes should be checked in the repository's Actions tab.
+
+## GitHub Actions verification
+
+The initial prototype commit is `ec1c253`. Its validation workflow passed on an
+Ubuntu GitHub-hosted runner: lint, Pyright, all 22 unit tests, narration validation,
+notebook execution, strict MyST build, and static-artifact checks.
+
+The narrated workflow also passed: Docker image construction, pinned Kokoro
+CPU synthesis, complete narrated-site checks, artifact upload, and Pages deployment.
+The first GitHub synthesis generated all four chunks in 61.619 seconds, then saved
+the model/audio cache. Run records:
+
+- [Validation](https://github.com/DeepLearnPhysics/spine-learn/actions/runs/37860818692)
+- [Narrated build and deployment](https://github.com/DeepLearnPhysics/spine-learn/actions/runs/37860818659)
+
+The live publication is served through the organization's existing Pages domain:
+[SPINE Learn](https://www.deeplearnphysics.org/spine-learn/). The GitHub.io address
+redirects there. GitHub Pages is configured to build from Actions.
+
+A [manual cached rebuild](https://github.com/DeepLearnPhysics/spine-learn/actions/runs/37861332773)
+also passed. It restored the same narration cache and generated **0 of 4 chunks
+in 0.014 seconds**, excluding Docker setup. Deployment was intentionally skipped
+for this verification run. Live HTTPS checks confirmed the lesson, all four
+24 kHz WAVs, their visible speed controls, the favicon, stylesheet, and player script.

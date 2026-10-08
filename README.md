@@ -212,7 +212,7 @@ site. Main pushes deploy it to Pages. A manual run deploys only on main when its
 GitHub Pages uses **GitHub Actions** as its publishing source. To configure a
 fork, select **Settings → Pages → Build and deployment → GitHub Actions**. The workflow sets `BASE_URL=/<repository-name>` for project-site
 paths, including iframe players. Publication target:
-[SPINE Learn](https://deeplearnphysics.github.io/spine-learn/).
+[SPINE Learn](https://www.deeplearnphysics.org/spine-learn/).
 
 The initial prototype is the baseline for a more realistic lesson. Generated
 notebooks, executed outputs, speech files, and model caches stay out of Git;

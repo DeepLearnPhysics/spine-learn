@@ -219,6 +219,7 @@ def _write_site_configuration(site: Path) -> None:
             ],
         },
         "site": {
+            "title": "SPINE Learn",
             "template": "book-theme",
             "options": {
                 "logo": "brand/spine-logo-light.png",
