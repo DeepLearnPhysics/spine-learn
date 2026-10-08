@@ -1,0 +1,214 @@
+/* Canonical brand color: sampled from the SPINE logo, not the older UI palettes. */
+:root {
+    --spine-orange: #EB7913;
+    --spine-orange-ink: color-mix(in srgb, var(--spine-orange) 72%, black);
+    --spine-orange-soft: color-mix(in srgb, var(--spine-orange) 10%, white);
+    --spine-orange-border: color-mix(in srgb, var(--spine-orange) 35%, white);
+
+    /* MyST's semantic tokens style links, navigation, buttons, and focus states. */
+    --myst-color-primary: var(--spine-orange);
+    --myst-color-primary-hover: var(--spine-orange-ink);
+    --myst-color-link: var(--spine-orange-ink);
+    --myst-color-link-hover: var(--spine-orange-ink);
+    --myst-color-link-underline: var(--spine-orange);
+    --myst-color-active: var(--spine-orange-ink);
+    --myst-color-active-bg: var(--spine-orange-soft);
+    --myst-color-active-surface: var(--spine-orange-soft);
+    --myst-color-focus-ring: var(--spine-orange);
+    --myst-color-focus-outline: var(--spine-orange-border);
+    --myst-color-accent-text: var(--spine-orange-ink);
+    --myst-color-accent-surface: var(--spine-orange-soft);
+    --myst-color-accent-surface-border: var(--spine-orange-border);
+    --myst-color-accent-surface-text: var(--spine-orange-ink);
+}
+
+/* Keep the exact brand orange as the accent against dark surfaces. */
+:root.dark,
+.dark {
+    --myst-color-link: var(--spine-orange);
+    --myst-color-link-hover: color-mix(in srgb, var(--spine-orange) 75%, white);
+    --myst-color-active: var(--spine-orange);
+    --myst-color-active-bg: color-mix(in srgb, var(--spine-orange) 15%, #191b1e);
+    --myst-color-active-surface: var(--myst-color-active-bg);
+    --myst-color-focus-ring: var(--spine-orange);
+    --myst-color-focus-outline: var(--spine-orange);
+    --myst-color-accent-text: var(--myst-color-link-hover);
+    --myst-color-accent-surface: var(--myst-color-active-bg);
+    --myst-color-accent-surface-border: var(--spine-orange-ink);
+    --myst-color-accent-surface-text: var(--myst-color-link-hover);
+}
+
+/* MyST wraps iframes in a video box; narration needs a compact, fixed height. */
+div:has(> iframe[title^="Narration for"]) {
+    padding-bottom: 0 !important;
+    height: 180px;
+    width: 100% !important;
+}
+
+iframe[title^="Narration for"] {
+    border-radius: 10px;
+}
+
+a[href^="#"] {
+    text-underline-offset: 3px;
+}
+
+/* The standalone iframe imports this file to use the same brand tokens. */
+.narration-player {
+    box-sizing: border-box;
+    font: 16px/1.5 system-ui;
+    margin: 0;
+    padding: 12px;
+    border-left: 4px solid var(--spine-orange);
+    color: #222222;
+    background: var(--spine-orange-soft);
+}
+
+.narration-player audio {
+    width: 100%;
+    height: 36px;
+    accent-color: var(--spine-orange);
+}
+
+.narration-player p {
+    margin: 4px 0;
+}
+
+.narration-player small {
+    color: var(--spine-orange-ink);
+}
+
+/* Let the header fill the window; its wrapper supplies responsive edge padding.
+   MyST's default 1440px cap otherwise creates large gutters on wide screens. */
+.myst-top-nav-bar {
+    width: 100%;
+    max-width: none;
+}
+
+/* Align the compact logo badge and label as one centered header lockup. */
+.myst-home-link {
+    align-items: center;
+    gap: 6px;
+}
+
+.myst-home-link-logo {
+    flex: 0 0 auto;
+    align-items: center;
+    margin-right: 0;
+    padding: 0;
+    border-radius: 4px;
+    background: #191b1e;
+}
+
+.myst-home-link-logo img[alt="SPINE"] {
+    width: 112px;
+    height: auto;
+    max-height: none;
+    object-fit: contain;
+    padding: 0;
+}
+
+.myst-home-link > span {
+    display: block;
+    font-size: 28px;
+    line-height: 1;
+    font-weight: 500;
+}
+
+/* Keep the landing hero compact and align all content to the same left edge. */
+.spine-banner {
+    margin: 1rem 0 1.5rem;
+    padding: 1.75rem 2rem;
+    border-bottom: 3px solid var(--spine-orange);
+    border-radius: 10px;
+    background: #191b1e;
+    color: #f2f3f4;
+}
+
+.spine-banner-logo {
+    display: block;
+    margin: 0 0 1rem;
+}
+
+.spine-banner-logo img {
+    display: block;
+    max-width: 100%;
+    height: auto;
+    margin: 0;
+}
+
+.spine-banner p {
+    color: #d5d7da;
+    margin: 0.5rem 0 0;
+}
+
+.spine-banner strong {
+    color: #ffffff;
+    font-size: clamp(1.1rem, 2.5vw, 1.4rem);
+    line-height: 1.35;
+}
+
+@media (max-width: 640px) {
+    .spine-banner {
+        padding: 1.25rem;
+    }
+}
+
+/* On very narrow phones, wrap controls instead of shrinking the brand text. */
+@media (max-width: 359px) {
+    .myst-top-nav-bar {
+        flex-wrap: wrap;
+        row-gap: 8px;
+    }
+
+    .myst-top-nav-bar > div:last-child {
+        flex-basis: 100%;
+    }
+}
+
+/* Options stay visible inside the iframe instead of opening a clipped popup. */
+.narration-options {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px 16px;
+    margin-top: 8px;
+    font-size: 14px;
+}
+
+.narration-speeds {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px;
+}
+
+.narration-speeds span {
+    margin-right: 4px;
+}
+
+.narration-speeds button {
+    padding: 4px 8px;
+    border: 1px solid var(--spine-orange-border);
+    border-radius: 5px;
+    color: #222222;
+    background: #ffffff;
+    font: inherit;
+    cursor: pointer;
+}
+
+.narration-speeds button[aria-pressed="true"] {
+    border-color: var(--spine-orange);
+    background: var(--spine-orange-soft);
+    font-weight: 600;
+}
+
+.narration-options a {
+    color: var(--spine-orange-ink);
+    text-underline-offset: 3px;
+}
+
+.narration-options :focus-visible {
+    outline: 2px solid var(--spine-orange-ink);
+    outline-offset: 2px;
+}

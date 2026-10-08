@@ -1,0 +1,4 @@
+kokoro==0.9.4
+soundfile==0.13.1
+PyYAML==6.0.3
+huggingface-hub==0.36.2

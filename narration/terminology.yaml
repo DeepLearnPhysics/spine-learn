@@ -1,0 +1,9 @@
+tutorial: terminology
+review_status: draft
+chunks:
+  - id: terminology
+    section: orientation
+    text: |
+      SPINE works with LArTPC data. DUNE and ICARUS are examples of experiments in this area.
+      Names you may encounter include UResNet, Graph-SPICE, and MinkowskiEngine.
+      An analysis might read HDF5 files and inspect dE/dx.

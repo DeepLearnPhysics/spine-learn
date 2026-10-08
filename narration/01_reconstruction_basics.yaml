@@ -1,0 +1,31 @@
+tutorial: reconstruction-basics
+review_status: draft
+chunks:
+  - id: orientation
+    section: orientation
+    text: |
+      Let's start at the point where a reconstruction becomes something you can inspect.
+      SPINE gives us particle candidates and interactions, but the labels on those objects still need interpretation.
+      For this lesson, we will build a tiny teaching example ourselves, so no detector file or neural network is needed.
+      Keep that distinction in mind: you are learning the interface, not measuring reconstruction performance.
+  - id: inspect-particles
+    section: inspect-particles
+    text: |
+      Take a moment to look at the first particle before moving on to the whole event.
+      Its size counts indexed points, while its units tell you how to interpret the coordinates.
+      Notice that we assigned the particle label ourselves.
+      When you inspect the plot, ask what the geometry actually tells you, and what information came from our assumptions instead.
+  - id: inspect-interactions
+    section: inspect-interactions
+    text: |
+      Now step up one level and collect the two candidates into an interaction.
+      This helper assembles the objects we give it; it does not discover that they belong together.
+      Compare the full particle list with the primary particle list, then read the topology summary.
+      That distinction will matter whenever you turn an object collection into an analysis selection.
+  - id: selection
+    section: selection
+    text: |
+      Before running the last example, predict what changes when we remove one primary flag.
+      The points stay exactly where they were, and both particles still exist, but the primary topology changes.
+      This is a useful habit for analysis: say precisely what your selection counts.
+      Later, when you read real HDF5 output, bring the same care to labels, units, and production settings.

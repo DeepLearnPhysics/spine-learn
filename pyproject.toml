@@ -1,0 +1,26 @@
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 88
+extend-exclude = ["_build", ".cache", ".venv"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.pyright]
+include = ["spine_learn", "scripts", "tests"]
+exclude = ["_build", ".cache", ".venv"]
+pythonVersion = "3.12"
+typeCheckingMode = "basic"
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff.lint.per-file-ignores]
+# The notebook's surrounding lesson prose serves as its module documentation.
+"tutorials/*.py" = ["D100"]

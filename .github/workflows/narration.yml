@@ -1,0 +1,62 @@
+name: Narrated site
+on:
+  workflow_dispatch:
+    inputs:
+      deploy:
+        description: Deploy this narrated build to GitHub Pages
+        type: boolean
+        default: false
+  push:
+    branches: [main]
+permissions:
+  contents: read
+concurrency:
+  group: narrated-site-${{ github.ref }}
+  cancel-in-progress: false
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: python -m venv .venv
+      - run: .venv/bin/pip install -r requirements-dev.txt
+      - uses: actions/cache@v4
+        with:
+          path: |
+            .cache/kokoro
+            _build/audio
+          key: narration-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('narration/**', 'tts/**', 'spine_learn/narration.py', 'spine_learn/kokoro_backend.py') }}
+          restore-keys: narration-${{ runner.os }}-${{ runner.arch }}-
+      - run: mkdir -p .cache/kokoro
+      - run: make lint test narration-check tts-image narration
+      - name: Build complete narrated site
+        env:
+          BASE_URL: /${{ github.event.repository.name }}
+        run: |
+          export PATH="$PWD/.venv/bin:$PATH"
+          .venv/bin/python -m spine_learn.build site --require-audio
+      - run: .venv/bin/python scripts/verify_site.py --require-audio --base /${{ github.event.repository.name }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: narrated-site
+          path: _build/site/_build/html
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _build/site/_build/html
+  deploy:
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy)
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v4
+        id: deployment
