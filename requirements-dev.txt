@@ -3,3 +3,4 @@
 ruff==0.16.10
 pyright==1.1.414
 types-PyYAML==6.0.12.20260906
+-r requirements-runtime.txt

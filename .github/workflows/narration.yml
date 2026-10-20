@@ -47,6 +47,90 @@ jobs:
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _build/site/_build/html
+      # S3DF serves the site at /, while GitHub Pages uses /spine-learn/.
+      # Reuse generated audio, but rebuild URLs rather than rewriting HTML strings.
+      - name: Build the S3DF site at the domain root
+        env:
+          BASE_URL: ''
+        run: |
+          export PATH="$PWD/.venv/bin:$PATH"
+          .venv/bin/python -m spine_learn.build site --require-audio
+          .venv/bin/python scripts/verify_site.py --require-audio
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s3df-site
+          path: _build/site/_build/html
+  publish-s3df:
+    if: github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: s3df-site
+          path: _build/site/_build/html
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: pip install PyYAML==6.0.3
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build the immutable application image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/Dockerfile
+          platforms: linux/amd64
+          load: true
+          tags: ghcr.io/deeplearnphysics/spine-learn:sha-${{ github.sha }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/DeepLearnPhysics/spine-learn
+            org.opencontainers.image.revision=${{ github.sha }}
+      - name: Test the exact image before publishing
+        env:
+          IMAGE: ghcr.io/deeplearnphysics/spine-learn:sha-${{ github.sha }}
+        run: python scripts/smoke_container.py "$IMAGE" --require-audio
+      - name: Publish image and render pinned deployment bundle
+        env:
+          IMAGE: ghcr.io/deeplearnphysics/spine-learn:sha-${{ github.sha }}
+        run: |
+          docker push "$IMAGE"
+          digest_ref=$(docker image inspect "$IMAGE" --format '{{index .RepoDigests 0}}')
+          python scripts/render_release.py --image "$digest_ref"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: s3df-release
+          path: _build/s3df-release
+      - uses: fluxcd/flux2/action@v2.9.6
+        with:
+          version: '2.9.6'
+      - name: Publish versioned deployment artifact
+        env:
+          REVISION: ${{ github.sha }}
+        run: |
+          flux push artifact "oci://ghcr.io/deeplearnphysics/spine-learn-deploy:sha-$REVISION" \
+            --path=_build/s3df-release \
+            --source=https://github.com/DeepLearnPhysics/spine-learn \
+            --revision="main@sha1:$REVISION"
+      - name: Promote only the current main revision for automatic deployment
+        env:
+          REVISION: ${{ github.sha }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          current=$(gh api repos/DeepLearnPhysics/spine-learn/commits/main --jq .sha)
+          if [ "$current" = "$REVISION" ]; then
+            flux tag artifact "oci://ghcr.io/deeplearnphysics/spine-learn-deploy:sha-$REVISION" --tag main
+          else
+            echo "A newer commit is on main; keep this release available without promoting it."
+          fi
   deploy:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy)
     needs: build

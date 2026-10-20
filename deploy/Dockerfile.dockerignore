@@ -1,0 +1,16 @@
+# Only public runtime inputs enter the build context; never send local credentials.
+**
+!requirements-runtime.txt
+!spine_learn/
+!spine_learn/__init__.py
+!spine_learn/tutor.py
+!spine_learn/web.py
+!tutorials/
+!tutorials/01_reconstruction_basics.md
+!deploy/
+!deploy/gunicorn.conf.py
+!_build/
+!_build/site/
+!_build/site/_build/
+!_build/site/_build/html/
+!_build/site/_build/html/**

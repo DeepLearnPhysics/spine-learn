@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: spine-learn
+spec:
+  # Limits are process-local: do not scale workers or replicas independently.
+  replicas: 1
+  strategy:
+    type: Recreate
+  revisionHistoryLimit: 3
+  progressDeadlineSeconds: 180
+  selector:
+    matchLabels:
+      app: spine-learn
+  template:
+    metadata:
+      labels:
+        app: spine-learn
+    spec:
+      automountServiceAccountToken: false
+      terminationGracePeriodSeconds: 70
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        fsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: spine-learn
+          # The release renderer replaces this with the tested image's SHA-256 digest.
+          image: ghcr.io/deeplearnphysics/spine-learn:SET_BY_RELEASE
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: SPINE_PUBLIC_ORIGIN
+              value: https://spine-learn.slac.stanford.edu
+            - name: GEMINI_MODEL
+              value: gemini-3.1-flash-lite
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: spine-learn-gemini
+                  key: api-key
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: [ALL]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+              ephemeral-storage: 64Mi
+            limits:
+              cpu: '1'
+              memory: 512Mi
+              ephemeral-storage: 256Mi
+          volumeMounts:
+            - name: temporary
+              mountPath: /tmp
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 20
+            timeoutSeconds: 3
+      volumes:
+        - name: temporary
+          emptyDir:
+            sizeLimit: 64Mi

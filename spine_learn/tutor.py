@@ -1,4 +1,4 @@
-"""Provide a bounded, lesson-grounded Gemini tutor for the local preview.
+"""Provide a bounded, lesson-grounded Gemini tutor for preview and hosted lessons.
 
 No credentials or conversations are written to the generated website. The
 browser supplies recent conversation turns; the server owns the lesson context.
@@ -108,7 +108,9 @@ class LessonTutor:
         contents = validate_messages(payload)
         key = self._api_key()
         if not key:
-            raise TutorError("Add a Gemini API key to enable the local tutor.", 503)
+            raise TutorError(
+                "Add a Gemini API key to enable the lesson assistant.", 503
+            )
         if not self._lock.acquire(blocking=False):
             raise TutorError(
                 "The tutor is answering another question. Try shortly.", 429
@@ -123,7 +125,7 @@ class LessonTutor:
                 self._day, self._daily_count = day, 0
             if len(self._requests) >= 6 or self._daily_count >= 200:
                 raise TutorError(
-                    "Local tutor limit reached. Please try again later.", 429
+                    "Tutor usage limit reached. Please try again later.", 429
                 )
             self._requests.append(now)
             self._daily_count += 1

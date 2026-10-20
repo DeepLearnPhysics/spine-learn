@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: spine-learn
+spec:
+  type: ClusterIP
+  selector:
+    app: spine-learn
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http

@@ -1,4 +1,5 @@
 // No credentials or persistent chat storage live in the browser.
+const isLocal = ["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname);
 const status = document.querySelector("#status");
 const availability = document.querySelector("#availability");
 const feedback = document.querySelector("#feedback");
@@ -32,19 +33,19 @@ async function loadConfiguration() {
         const data = await response.json();
         ready = data.configured === true;
         status.textContent = ready
-            ? `Key configured · ${data.model} · ready to try a question`
-            : "The local tutor needs a Gemini API key.";
+            ? `Ready · ${data.model}`
+            : (isLocal ? "The local tutor needs a Gemini API key." : "The lesson assistant is not configured yet.");
     } catch {
         ready = false;
-        status.textContent = "Chat is available in the local tutor preview. See setup below.";
-        if (!["localhost", "127.0.0.1", "[::1]"].includes(window.location.hostname)) {
+        status.textContent = isLocal ? "Chat is available in the local tutor preview. See setup below." : "The lesson assistant is temporarily unavailable.";
+        if (!isLocal) {
             availability.textContent = "The lesson assistant is not available on this hosted site yet. You can read the full lesson and download its notebook while public chat hosting is being set up.";
             availability.hidden = false;
             document.body.classList.add("tutor-unavailable");
             frame?.parentElement?.classList.add("tutor-unavailable");
         }
     }
-    setup.hidden = ready;
+    setup.hidden = ready || !isLocal;
     busy = false;
     updateControls();
 }

@@ -18,6 +18,10 @@ jobs:
       - run: .venv/bin/pip install -r requirements-dev.txt
       - run: make lint test narration-check site
       - run: .venv/bin/python scripts/verify_site.py
+      - name: Build and smoke-test the production runtime
+        run: |
+          docker build -f deploy/Dockerfile -t spine-learn:test .
+          .venv/bin/python scripts/smoke_container.py spine-learn:test
       - uses: actions/upload-artifact@v4
         with:
           name: tutorial-preview

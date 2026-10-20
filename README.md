@@ -320,3 +320,11 @@ this first lesson's authoring workflow.
 source. Pale backgrounds and darker text colors are derived from it; the darker
 orange keeps small links readable on white. Run `make site` and refresh the
 preview after editing the stylesheet.
+
+## S3DF hosting and automated releases
+
+The production serving layer, public HTTPRoute, first-rollout instructions, and
+optional Flux pull-based deployment are documented in [k8s/README.md](k8s/README.md).
+GitHub Actions publishes a tested application image and a digest-pinned deployment
+bundle; cluster access and the Gemini Secret remain on S3DF. The local `make tutor`
+preview remains available independently.
