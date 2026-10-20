@@ -185,6 +185,20 @@ def _add_guided_sections(
                 )
             previous_section = section
 
+    # Keep the interactive companion out of the standalone runnable notebook.
+    companion = (
+        f"\n```{{iframe}} {base_url}/tutor/index.html\n"
+        ":title: SPINE Learn lesson companion\n"
+        ":width: 100%\n"
+        "```\n\n"
+    )
+    for cell in website.cells:
+        if cell.cell_type == "markdown" and "(orientation)=" in cell.source:
+            cell.source = cell.source.replace(
+                "(orientation)=", companion + "(orientation)=", 1
+            )
+            break
+
     return website
 
 
@@ -194,6 +208,7 @@ def _write_site_configuration(site: Path) -> None:
     shutil.copy(ROOT / "site_assets/style.css", site / "style.css")
     shutil.copy(ROOT / "site_assets/narration.js", site / "narration.js")
     shutil.copytree(ROOT / "site_assets/brand", site / "brand", dirs_exist_ok=True)
+    shutil.copytree(ROOT / "site_assets/tutor", site / "tutor", dirs_exist_ok=True)
 
     configuration = {
         "version": 1,
@@ -205,6 +220,7 @@ def _write_site_configuration(site: Path) -> None:
                 {"file": "lesson.ipynb"},
             ],
             "static_files": [
+                "tutor",
                 "players",
                 "audio",
                 "downloads",

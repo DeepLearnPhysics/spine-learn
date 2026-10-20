@@ -43,6 +43,61 @@ with the maintainer's explicit approval. Edit it directly; no LLM runs in the
 build pipeline. Set `review_status: reviewed` after your review. That label does
 not change the synthesized speech or force a rebuild.
 
+## Try the embedded lesson companion locally
+
+The lesson includes a floating **Ask SPINE** panel. This is
+an optional local demonstrator: it explains the canonical lesson using Gemini,
+offers hints, and supports follow-up questions. It cannot run code or inspect
+local notebooks. The runnable notebook remains independent of the chat.
+
+```bash
+make site
+make tutor-key              # hidden prompt; paste a free-tier Gemini API key
+make tutor                  # http://127.0.0.1:8002/lesson
+```
+
+Create your key in [Google AI Studio](https://aistudio.google.com/api-keys), using
+a project on the **Free** tier. No billing setup is needed for this demonstrator.
+The code does not enable or upgrade billing; a key from a paid project is still
+billed according to that project's settings. The default model is
+`gemini-3.1-flash-lite`; select another model available to your project with
+`GEMINI_MODEL=model-name make tutor` if needed. Opening the panel only
+checks whether a key is configured. **Check connection**
+sends a real test request to verify model access and consumes API quota.
+
+`make tutor-key` saves the key in `.gemini-api-key` with owner-only permissions.
+The file is Git-ignored and outside the served directory. An existing
+`GEMINI_API_KEY` environment variable takes precedence. You can add or replace the
+key while the server runs, then click **Check connection**; no rebuild or restart
+is required. Do not place keys in lesson sources, browser code, or GitHub Pages.
+
+Open **Ask SPINE** in the lower-right corner of the lesson. The panel stays
+accessible while scrolling; minimize it or press Escape to return to reading
+without losing the conversation. Answers render Markdown, including code blocks,
+lists, and tables. Try a suggested question, ask a follow-up, and use **New
+conversation** to clear it. Chat history stays in memory in the current browser
+tab and disappears on reload. Each request sends the lesson source, question,
+and up to six recent exchanges (at most 24,000 history characters) to Google.
+The server does not save prompts or responses. Google's own data handling terms
+apply; use public lesson material rather than confidential research data.
+
+The local backend accepts one request at a time, at most six per minute and 200
+per UTC day **per process**. Restarting resets these local counters. These limits
+are separate from Google's account/model quotas, not a guarantee of free-tier
+capacity. Provider quota errors leave the question available to retry; the app
+never retries automatically. Output is capped at 2,048 tokens. API responses include token usage for
+inspection in browser developer tools; no extra logging infrastructure is needed.
+
+`scripts/serve_tutor.py` serves both static pages and `/api/tutor/*` on loopback
+port 8002. It rejects foreign Host/Origin headers and bounds request sizes. It
+uses Python's standard library, so there are no new runtime dependencies.
+The existing `make serve` remains a static preview; its chat displays setup help.
+A GitHub Pages build alone cannot answer questions; the panel explains that
+public chat is not available yet and hides the inactive form. Public deployment of
+the backend, durable quotas, and remote endpoint configuration are future work.
+Tests mock provider responses and never spend API quota; actual teaching quality
+must be evaluated with a real key and representative learner questions.
+
 ## The first lesson
 
 **From points to particles to interactions** is a 20-minute introduction to

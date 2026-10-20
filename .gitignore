@@ -7,3 +7,8 @@ __pycache__/
 .DS_Store
 
 .ruff_cache/
+
+# Local-only Gemini credentials (never copied to the built site).
+.gemini-api-key
+.env
+.env.*

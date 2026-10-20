@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>SPINE Learn lesson companion</title>
+  <link rel="stylesheet" href="../style.css">
+  <link rel="stylesheet" href="tutor.css">
+  <script src="vendor/marked.umd.js" defer></script>
+  <script src="vendor/purify.min.js" defer></script>
+  <script src="tutor.js" defer></script>
+</head>
+<body>
+  <details id="companion">
+    <summary aria-label="Open lesson help"><strong>Ask SPINE</strong><span class="toggle-icon" aria-hidden="true">+</span></summary>
+    <div class="panel">
+      <p class="intro">Questions, explanations, and hints for this lesson.</p>
+      <p id="availability" role="status" hidden></p>
+      <div class="suggestions" aria-label="Suggested questions">
+        <button type="button" data-question="Why is this fixture synthetic, and what can I learn from it?">Explain the fixture</button>
+        <button type="button" data-question="What is the difference between a SPINE particle label and a PDG code?">Labels vs PDG codes</button>
+        <button type="button" data-question="Give me a first hint for the selection exercise without giving away the solution.">Give me a hint</button>
+      </div>
+      <div id="messages" role="log" aria-label="Conversation" aria-live="polite"></div>
+      <form id="chat">
+        <label for="question">Your question</label>
+        <textarea id="question" rows="3" maxlength="4000" placeholder="What would you like to understand?" required disabled></textarea>
+        <div class="actions">
+          <button id="send" type="submit" disabled>Ask</button>
+          <button id="clear" type="button">New conversation</button>
+        </div>
+        <p id="feedback" role="status"></p>
+      </form>
+      <details class="settings"><summary>Connection &amp; privacy</summary>
+      <p id="status" role="status">Checking the tutor…</p>
+      <details id="setup" hidden>
+        <summary>Enable the local tutor</summary>
+        <p>Run <code>make tutor</code> and open its preview URL. Run <code>make tutor-key</code> in another terminal to save a free-tier Gemini API key in <code>.gemini-api-key</code>, then select <strong>Check connection</strong>. This file is ignored by Git and is never included in the website.</p>
+        <p><a href="https://aistudio.google.com/api-keys" target="_blank" rel="noopener noreferrer">Create a key in Google AI Studio ↗</a>. Do not paste your key into the conversation.</p>
+      </details>
+      <button id="reconnect" type="button">Check connection</button>
+      <p class="footnote">Questions and recent chat history are sent to Google Gemini when you press Ask. Check connection sends a test request. Answers may be wrong; check the lesson. The tutor cannot run your notebook. Chat stays in this tab and is cleared on reload.</p>
+      </details>
+    </div>
+  </details>
+</body>
+</html>

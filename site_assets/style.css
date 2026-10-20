@@ -212,3 +212,41 @@ a[href^="#"] {
     outline: 2px solid var(--spine-orange-ink);
     outline-offset: 2px;
 }
+
+/* A viewport-anchored help panel, independent of the article's maximum width. */
+div:has(> iframe[title="SPINE Learn lesson companion"]) {
+    position: fixed !important;
+    inset: auto 20px 20px auto !important;
+    z-index: 1000;
+    margin: 0 !important;
+    padding: 0 !important;
+    width: 176px !important;
+    height: 58px !important;
+    max-width: calc(100vw - 24px);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 6px 28px #0003;
+}
+div.tutor-open:has(> iframe[title="SPINE Learn lesson companion"]) {
+    width: 440px !important;
+    height: min(720px, calc(100dvh - 40px)) !important;
+}
+iframe[title="SPINE Learn lesson companion"] {
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+@media (max-width: 600px) {
+    div:has(> iframe[title="SPINE Learn lesson companion"]) {
+        right: 12px !important;
+        bottom: 12px !important;
+    }
+    div.tutor-open:has(> iframe[title="SPINE Learn lesson companion"]) {
+        width: calc(100vw - 24px) !important;
+        height: min(720px, calc(100dvh - 24px)) !important;
+    }
+}
+
+div.tutor-open.tutor-unavailable:has(> iframe[title="SPINE Learn lesson companion"]) {
+    height: 240px !important;
+}

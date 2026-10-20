@@ -1,0 +1,83 @@
+/* The companion has its own responsive frame; it does not alter MyST's grid. */
+:root { color-scheme: light; --surface: #fff; --text: #242424; --muted: #555; --line: #ddd; }
+:root.dark { color-scheme: dark; --surface: #202020; --text: #f5f5f5; --muted: #ccc; --line: #555; }
+* { box-sizing: border-box; }
+body { margin: 0; padding: 2px; font: 16px/1.5 system-ui, sans-serif; color: var(--text); background: transparent; }
+#companion { border: 1px solid var(--line); border-left: 4px solid var(--spine-orange); border-radius: 10px; background: var(--surface); }
+summary { cursor: pointer; padding: 14px 18px; }
+summary strong { font-size: 18px; }
+summary span { display: block; margin-left: 18px; font-size: 14px; color: var(--muted); }
+.panel { padding: 0 18px 18px; }
+p { margin: 10px 0; }
+#status { font-size: 14px; color: var(--muted); }
+#setup { border: 1px solid var(--line); padding: 0 10px 10px; border-radius: 6px; }
+#setup summary { padding: 10px 0; }
+code { overflow-wrap: anywhere; }
+a { color: var(--spine-orange-ink); }
+.dark a { color: var(--spine-orange); }
+button, textarea { font: inherit; }
+button { padding: 8px 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--text); cursor: pointer; }
+button:disabled { opacity: .55; cursor: not-allowed; }
+button:hover:not(:disabled) { border-color: var(--spine-orange); }
+button:focus-visible, summary:focus-visible, textarea:focus-visible { outline: 2px solid var(--spine-orange); outline-offset: 2px; }
+.suggestions, .actions { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; }
+.suggestions button { font-size: 13px; }
+#messages { max-height: 340px; overflow-y: auto; overflow-wrap: anywhere; }
+.message { border-top: 1px solid var(--line); padding: 12px 0; }
+.message > strong { display: block; margin-bottom: 5px; }
+.message p { white-space: pre-wrap; }
+.message pre { white-space: pre-wrap; background: color-mix(in srgb, var(--text) 6%, var(--surface)); padding: 12px; border-radius: 6px; }
+label { display: block; font-weight: 600; }
+textarea { display: block; width: 100%; min-height: 85px; resize: vertical; margin-top: 6px; padding: 10px; border: 1px solid var(--line); border-radius: 6px; color: var(--text); background: var(--surface); }
+#send { background: var(--spine-orange); color: #111; font-weight: 600; border-color: var(--spine-orange); }
+.footnote { color: var(--muted); font-size: 12px; }
+[hidden] { display: none !important; }
+@media (max-width: 400px) { .panel { padding: 0 10px 12px; } summary { padding: 12px 10px; } }
+
+#feedback:empty { display: none; }
+#feedback.error { border-left: 3px solid #EB7913; padding: 0.75rem; background: rgba(235, 121, 19, 0.12); }
+
+/* The header and composer stay visible while conversation content scrolls. */
+html, body { height: 100%; overflow: hidden; }
+body { padding: 0; }
+#companion { height: 100%; border: 1px solid var(--line); border-radius: 16px; overflow: hidden; }
+#companion > summary { height: 56px; display: flex; align-items: center; justify-content: space-between; list-style: none; background: #EB7913; color: #171717; padding: 0 18px; }
+#companion > summary::-webkit-details-marker { display: none; }
+#companion > summary span { display: inline; margin: 0; font-size: 24px; color: inherit; }
+.panel { height: calc(100dvh - 58px); display: flex; flex-direction: column; padding: 0 16px 12px; min-height: 0; }
+.intro { font-size: 13px; color: var(--muted); margin-bottom: 0; }
+.suggestions { margin: 8px 0; gap: 5px; flex-shrink: 0; }
+.suggestions button { padding: 5px 8px; font-size: 12px; }
+#messages { flex: 1; min-height: 48px; max-height: none; overscroll-behavior: contain; }
+#chat { flex-shrink: 0; border-top: 1px solid var(--line); padding-top: 8px; }
+#chat label { font-size: 13px; }
+textarea { min-height: 64px; height: 64px; max-height: 120px; resize: none; font-size: 16px; }
+.actions { margin: 8px 0; }
+#feedback { font-size: 12px; margin: 4px 0; max-height: 64px; overflow: auto; }
+.settings { flex-shrink: 0; font-size: 12px; max-height: 30%; overflow: auto; }
+.settings > summary { padding: 4px 0; color: var(--muted); }
+.settings #status { font-size: 12px; }
+.message { font-size: 14px; }
+.message > strong { font-size: 12px; color: var(--muted); }
+.message p { white-space: normal; }
+.message-content { overflow-wrap: anywhere; }
+.message-content ul, .message-content ol { padding-left: 22px; list-style: revert; margin: 10px 0; }
+.message-content h1, .message-content h2, .message-content h3,
+.message-content h4, .message-content h5, .message-content h6 { font-size: 16px; font-weight: 700; margin: 12px 0 6px; }
+.message-content pre { white-space: pre; overflow-x: auto; }
+.message-content code { font-size: 0.9em; background: color-mix(in srgb, var(--text) 8%, var(--surface)); border-radius: 3px; padding: 1px 3px; }
+.message-content pre code { background: none; padding: 0; }
+.message-content blockquote { border-left: 3px solid #EB7913; padding-left: 12px; margin-left: 0; }
+.message-content table { display: block; overflow-x: auto; border-collapse: collapse; }
+.message-content th, .message-content td { padding: 6px; border: 1px solid var(--line); }
+@media (max-height: 500px) {
+    .intro, .suggestions { display: none; }
+    textarea { min-height: 44px; height: 44px; }
+}
+
+/* Static hosting has no chat backend; explain that instead of showing a dead form. */
+.tutor-unavailable .suggestions,
+.tutor-unavailable #messages,
+.tutor-unavailable #chat,
+.tutor-unavailable .settings { display: none; }
+#availability { font-size: 14px; }

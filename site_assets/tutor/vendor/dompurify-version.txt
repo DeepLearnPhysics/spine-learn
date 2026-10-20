@@ -1,0 +1,2 @@
+dompurify 3.4.17
+https://registry.npmjs.org/dompurify/-/dompurify-3.4.17.tgz

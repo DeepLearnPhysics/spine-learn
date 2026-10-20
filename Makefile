@@ -43,3 +43,11 @@ lint:
 format:
 	$(PYTHON) -m ruff check --fix .
 	$(PYTHON) -m ruff format .
+
+.PHONY: tutor
+tutor:
+	$(PYTHON) scripts/serve_tutor.py
+
+.PHONY: tutor-key
+tutor-key:
+	$(PYTHON) scripts/configure_tutor.py
