@@ -45,9 +45,9 @@ def inputs() -> NarrationInputs:
 
 
 def test_yaml_and_mapping(inputs: NarrationInputs) -> None:
-    """Accept the real four-section draft narration and its section mapping."""
+    """Accept the real guided draft narration and its section mapping."""
     document, _, _ = inputs
-    assert len(document["chunks"]) == 4
+    assert len(document["chunks"]) == 5
     assert document["review_status"] == "draft"
 
 
@@ -68,6 +68,14 @@ def test_yaml_and_mapping(inputs: NarrationInputs) -> None:
             "lowercase slugs",
         ),
         (lambda document: document.update(chunks="wrong"), "nonempty list"),
+        (
+            lambda document: document["chunks"][0].update(next_step="missing"),
+            "unknown next_step",
+        ),
+        (
+            lambda document: document["chunks"][0].update(next_chunk="missing"),
+            "unknown next_chunk",
+        ),
     ],
 )
 def test_bad_narration(
@@ -156,7 +164,7 @@ def test_realistic_incremental_sequence(
     """Rebuild only affected chunks across ordinary narration maintenance edits."""
     document, configuration, dictionary = inputs
     fake = FakeBackend()
-    assert build(document, configuration, dictionary, tmp_path, fake) == 4
+    assert build(document, configuration, dictionary, tmp_path, fake) == 5
     assert build(document, configuration, dictionary, tmp_path, fake) == 0
     # Text and pronunciation edits should each touch just one recording.
     document["chunks"][1]["text"] += " Look again."
@@ -167,8 +175,8 @@ def test_realistic_incremental_sequence(
     assert build(document, configuration, dictionary, tmp_path, fake) == 0
     # Voice changes affect every recording; a missing file affects only itself.
     configuration["voice"] = "am_adam"
-    assert build(document, configuration, dictionary, tmp_path, fake) == 4
-    assert len(current_audio(document, configuration, dictionary, tmp_path)) == 4
+    assert build(document, configuration, dictionary, tmp_path, fake) == 5
+    assert len(current_audio(document, configuration, dictionary, tmp_path)) == 5
     first = next(
         iter(current_audio(document, configuration, dictionary, tmp_path).values())
     )
@@ -203,7 +211,7 @@ def test_stale_audio_not_presented(tmp_path: Path, inputs: NarrationInputs) -> N
     document, configuration, dictionary = inputs
     build(document, configuration, dictionary, tmp_path, FakeBackend())
     document["chunks"][0]["text"] += " Changed."
-    assert len(current_audio(document, configuration, dictionary, tmp_path)) == 3
+    assert len(current_audio(document, configuration, dictionary, tmp_path)) == 4
 
 
 def test_corrupted_audio_not_presented(tmp_path: Path, inputs: NarrationInputs) -> None:
@@ -211,7 +219,7 @@ def test_corrupted_audio_not_presented(tmp_path: Path, inputs: NarrationInputs) 
     document, configuration, dictionary = inputs
     build(document, configuration, dictionary, tmp_path, FakeBackend())
     next(tmp_path.glob("*.wav")).write_bytes(b"corrupted" * 20)
-    assert len(current_audio(document, configuration, dictionary, tmp_path)) == 3
+    assert len(current_audio(document, configuration, dictionary, tmp_path)) == 4
 
 
 def test_corrupted_audio_is_regenerated(
@@ -222,4 +230,13 @@ def test_corrupted_audio_is_regenerated(
     build(document, configuration, dictionary, tmp_path, FakeBackend())
     next(tmp_path.glob("*.wav")).write_bytes(b"corrupted" * 20)
     assert build(document, configuration, dictionary, tmp_path, FakeBackend()) == 1
-    assert len(current_audio(document, configuration, dictionary, tmp_path)) == 4
+    assert len(current_audio(document, configuration, dictionary, tmp_path)) == 5
+
+
+def test_navigation_does_not_regenerate_speech(inputs: NarrationInputs) -> None:
+    """Allow pacing changes without invalidating unchanged spoken content."""
+    document, configuration, dictionary = inputs
+    chunk = document["chunks"][0]
+    original = fingerprint(chunk, configuration, dictionary)
+    chunk["next_step"] = "selection"
+    assert fingerprint(chunk, configuration, dictionary) == original

@@ -5,7 +5,7 @@ files edited by authors. Keep the on-disk format as ordinary YAML dictionaries.
 """
 
 from pathlib import Path
-from typing import Protocol, TypedDict
+from typing import NotRequired, Protocol, TypedDict
 
 
 class NarrationChunk(TypedDict):
@@ -14,6 +14,10 @@ class NarrationChunk(TypedDict):
     id: str
     section: str
     text: str
+    focus: NotRequired[str]
+    next_step: NotRequired[str]
+    next_chunk: NotRequired[str]
+    continue_label: NotRequired[str]
 
 
 class NarrationDocument(TypedDict):

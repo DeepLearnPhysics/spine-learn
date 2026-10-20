@@ -3,29 +3,57 @@ review_status: draft
 chunks:
   - id: orientation
     section: orientation
+    focus: orientation
+    next_step: orientation-activity
+    next_chunk: orientation-explanation
+    continue_label: I've tried it — continue narration
     text: |
-      Let's start at the point where a reconstruction becomes something you can inspect.
-      SPINE gives us particle candidates and interactions, but the labels on those objects still need interpretation.
-      For this lesson, we will build a tiny teaching example ourselves, so no detector file or neural network is needed.
-      Keep that distinction in mind: you are learning the interface, not measuring reconstruction performance.
+      Let's open one entry from this HDF5 sample. Before you run the cell,
+      separate two questions: how many entries are in the file, and how many
+      reconstructed interactions are in the entry we opened? Those need not
+      be the same number. The reader loads stored results; the builder restores
+      their links to points and to each other. We are not running reconstruction.
+      Now try the cell, or inspect the saved output. Find both counts and explain
+      the distinction to yourself. I'll pause here. When you're ready, select
+      I've tried it, continue narration, for the explanation.
+  - id: orientation-explanation
+    section: orientation-explanation
+    focus: orientation-explanation
+    next_step: inspect-particles
+    continue_label: Continue to particle inspection
+    text: |
+      The file has six entries, but we opened only entry zero. In that entry,
+      reconstruction grouped two thousand two hundred and twenty-eight points
+      into nine particle candidates and associated them with three interactions.
+      An entry is a container for this example; an interaction is a reconstructed
+      association within it. Don't confuse either count with the number of
+      particles. And don't read a reconstructed label as proof of truth.
+      Before continuing, ask yourself where you would find the points belonging
+      to just one particle. If you would start from that particle's membership
+      in the shared point array, you're ready for the next section. Otherwise,
+      replay this explanation or read the text at your own pace.
   - id: inspect-particles
     section: inspect-particles
     text: |
-      Take a moment to look at the first particle before moving on to the whole event.
-      Its size counts indexed points, while its units tell you how to interpret the coordinates.
-      Notice that we assigned the particle label ourselves.
-      When you inspect the plot, ask what the geometry actually tells you, and what information came from our assumptions instead.
+      Inspect particle four, a reconstructed primary muon candidate.
+      Compare its point count with the rows selected from the event array.
+      Size counts points; it is not a physical length. Coordinates here are
+      in centimeters. Try another particle and compare the properties and plot.
+      Remember that the displayed species are reconstruction labels, not identities
+      established by looking at the geometry alone.
   - id: inspect-interactions
     section: inspect-interactions
     text: |
-      Now step up one level and collect the two candidates into an interaction.
-      This helper assembles the objects we give it; it does not discover that they belong together.
-      Compare the full particle list with the primary particle list, then read the topology summary.
-      That distinction will matter whenever you turn an object collection into an analysis selection.
+      Follow particle four to interaction one. Read its full particle list,
+      then compare it with the primary list. Six particles belong to this
+      interaction, but only three are primary. Find the other three in the output.
+      The topology summarizes valid primary candidates, not every constituent
+      and not the physical interaction mode.
   - id: selection
     section: selection
     text: |
-      Before running the last example, predict what changes when we remove one primary flag.
-      The points stay exactly where they were, and both particles still exist, but the primary topology changes.
-      This is a useful habit for analysis: say precisely what your selection counts.
-      Later, when you read real HDF5 output, bring the same care to labels, units, and production settings.
+      Our selection asks for exactly one valid primary muon candidate.
+      Read each condition before running it. Then remove only the primary
+      requirement and predict which additional interaction will pass.
+      The stored objects have not changed; your question about them has.
+      That distinction is central to understanding what an analysis selection means.

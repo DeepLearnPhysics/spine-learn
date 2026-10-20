@@ -10,6 +10,7 @@ import os
 import re
 import shutil
 import subprocess
+import zipfile
 from copy import deepcopy
 from pathlib import Path
 
@@ -23,7 +24,7 @@ from .models import NarrationChunk, NarrationDocument
 from .narration import ROOT, SOURCE, current_audio, load_inputs
 
 BUILD = ROOT / "_build"
-NOTEBOOK_PATH = BUILD / "notebooks/reconstruction-basics.ipynb"
+NOTEBOOK_PATH = BUILD / "notebooks/01_points_particles_interactions.ipynb"
 
 
 def export_notebook(
@@ -73,43 +74,92 @@ def export_notebook(
     return notebook
 
 
-def player_html(chunk: NarrationChunk, audio: Path | None, review_status: str) -> str:
+def player_html(chunk: NarrationChunk, audio: Path | None) -> str:
     """Render a small accessible audio player, or a clear missing-audio message."""
     label = html.escape(chunk["section"].replace("-", " "))
-    review_label = html.escape(review_status.upper())
+    focus = html.escape(chunk.get("focus", chunk["section"]), quote=True)
+
+    def icon(path: str) -> str:
+        """Keep control icons consistent and hidden from screen readers."""
+        return (
+            '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" '
+            'stroke="currentColor" stroke-width="1.8" stroke-linecap="round" '
+            f'stroke-linejoin="round"><path d="{path}"/></svg>'
+        )
+
+    play_icon = icon("M8 5v14l11-7z")
+    next_icon = icon("M5 12h14m-6-6 6 6-6 6")
+    settings_icon = icon("M4 7h16M4 17h16M9 4v6M15 14v6")
+    download_icon = icon("M12 3v12m-5-5 5 5 5-5M5 17v4h14v-4")
+    transcript_name = html.escape(
+        f"spine-learn-{chunk['id']}-transcript.txt", quote=True
+    )
+    transcript_button = (
+        f'<a class="setting-button" href="../downloads/{transcript_name}" '
+        f'download="{transcript_name}" title="Download transcript (.txt)">'
+        f"{download_icon}<span>Transcript</span></a>"
+    )
+    guidance_attributes = ""
+    continuation = ""
+    scroll_option = ""
+    if "next_step" in chunk:
+        guidance_attributes = " ".join(
+            f'data-{key.replace("_", "-")}="'
+            f'{html.escape(chunk.get(key, ""), quote=True)}"'
+            for key in ("focus", "next_step", "next_chunk")
+        )
+        button_label = html.escape(chunk.get("continue_label", "Continue"), quote=True)
+        continuation = (
+            '<button type="button" class="icon-button continue-narration" '
+            f'title="{button_label}" aria-label="{button_label}">{next_icon}</button>'
+        )
+        scroll_option = (
+            '<button type="button" class="setting-button follow-scroll" '
+            'aria-pressed="false" title="Scroll to the active step">'
+            "Follow step</button>"
+        )
 
     if audio is None:
-        control = (
-            "<p>Audio has not been generated for this version. "
-            "Read the transcript below.</p>"
-        )
+        control = "<p>Audio unavailable for this version.</p>" + transcript_button
     else:
         filename = html.escape(audio.name, quote=True)
-        # Keep speed choices outside Chrome's native menu, which is clipped
-        # by the iframe. Each player has its own audio element and controls.
+        download_name = html.escape(f"spine-learn-{chunk['id']}.wav", quote=True)
         speed_buttons = []
         for speed in (0.75, 1.0, 1.25, 1.5, 2.0):
             selected = "true" if speed == 1 else "false"
             speed_buttons.append(
-                f'<button type="button" data-speed="{speed:g}" '
+                f'<button type="button" class="setting-button" data-speed="{speed:g}" '
                 f'aria-pressed="{selected}">{speed:g}×</button>'
             )
         choices = " ".join(speed_buttons)
-        download_name = html.escape(f"spine-learn-{chunk['id']}.wav", quote=True)
         control = f"""
-  <audio controls preload="none" controlslist="nodownload noplaybackrate"
-         aria-label="Narration: {label}" src="../audio/{filename}">
-    Audio playback unavailable.
+  <audio preload="metadata" aria-label="Narration: {label}" src="../audio/{filename}">
   </audio>
-  <div class="narration-options">
+  <div class="audio-toolbar">
+    <button type="button" class="icon-button toggle-play" title="Play narration"
+            aria-label="Play narration">{play_icon}</button>
+    <span class="audio-label">Listen</span>
+    <input class="audio-progress" type="range" min="0" max="100" value="0"
+           step="0.1" aria-label="Seek narration" disabled>
+    <span class="audio-time" aria-hidden="true">0:00</span>
+    {continuation}
+    <button type="button" class="icon-button toggle-settings" title="Audio settings"
+            aria-label="Audio settings" aria-expanded="false"
+            aria-controls="audio-settings">{settings_icon}</button>
+  </div>
+  <div class="narration-options" id="audio-settings" hidden>
     <div class="narration-speeds" role="group" aria-label="Playback speed">
-      <span>Speed</span>
-      {choices}
+      <span>Speed</span> {choices}
     </div>
-    <a href="../audio/{filename}" download="{download_name}">Download audio</a>
+    {scroll_option}
+    <a class="setting-button" href="../audio/{filename}" download="{download_name}"
+       title="Download audio (.wav)">{download_icon}<span>Audio</span></a>
+    {transcript_button}
   </div>
 """
 
+    # Settings expand in the document flow so the iframe never clips a popup.
+    guidance_class = "narration-guidance" if "next_step" in chunk else ""
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -119,27 +169,25 @@ def player_html(chunk: NarrationChunk, audio: Path | None, review_status: str) -
   <link rel="stylesheet" href="../style.css">
   <script src="../narration.js" defer></script>
 </head>
-<body class="narration-player">
-  <small>LISTEN · {review_label} NARRATION</small>
-  {control}
+<body class="narration-player" data-focus="{focus}"
+      data-notebook="../downloads/{NOTEBOOK_PATH.name}">
+  <div class="{guidance_class}" {guidance_attributes}>
+    {control}
+    <p role="status" class="guidance-status visually-hidden"></p>
+  </div>
 </body>
 </html>
 """
 
 
-def _narration_directives(
-    chunk: NarrationChunk, review_status: str, base_url: str
-) -> str:
-    """Create the MyST player and transcript for one semantic section."""
+def _narration_directives(chunk: NarrationChunk, base_url: str) -> str:
+    """Embed the compact player; transcripts are available as downloads."""
     player_url = f"{base_url}/players/{chunk['id']}.html"
     return (
         f"\n```{{iframe}} {player_url}\n"
         f":title: Narration for {chunk['section']}\n"
         ":width: 100%\n"
         "```\n\n"
-        f"```{{dropdown}} Narration transcript · {review_status}\n"
-        f"{chunk['text'].strip()}\n"
-        "```\n"
     )
 
 
@@ -149,6 +197,18 @@ def _add_guided_sections(
     """Add narration and Continue links without changing the downloadable copy."""
     website = deepcopy(notebook)
     website.metadata.pop("jupytext", None)
+    website.metadata.update(
+        {
+            "downloads": [
+                {
+                    "url": f"{base_url}/downloads/{NOTEBOOK_PATH.name}",
+                    "filename": NOTEBOOK_PATH.name,
+                    "title": "Download lesson notebook (.ipynb)",
+                }
+            ],
+            "exports": [],
+        }
+    )
     chunks = {chunk["section"]: chunk for chunk in document["chunks"]}
     previous_section: str | None = None
 
@@ -159,10 +219,8 @@ def _add_guided_sections(
         # Restore MyST labels so the website renderer can resolve section links.
         cell.source = re.sub(r'<a id="([a-z0-9-]+)"></a>', r"(\1)=", cell.source)
         for section, chunk in chunks.items():
-            heading_pattern = rf"(\({re.escape(section)}\)=\n## [^\n]+\n)"
-            directives = _narration_directives(
-                chunk, document["review_status"], base_url
-            )
+            heading_pattern = rf"(\({re.escape(section)}\)=\n#{{2,3}} [^\n]+\n)"
+            directives = _narration_directives(chunk, base_url)
 
             # Bind the current directives explicitly; each section has its own text.
             def append_narration(
@@ -175,7 +233,9 @@ def _add_guided_sections(
 
         # Place Continue immediately before the next section, after any prose
         # that still belongs to the previous one in this Markdown cell.
-        section_match = re.search(r"^\(([a-z0-9-]+)\)=$", cell.source, re.MULTILINE)
+        section_match = re.search(
+            r"^\(([a-z0-9-]+)\)=\n(?=## )", cell.source, re.MULTILINE
+        )
         if section_match and section_match[1] in chunks:
             section = section_match[1]
             if previous_section is not None:
@@ -185,7 +245,7 @@ def _add_guided_sections(
                 )
             previous_section = section
 
-    # Keep the interactive companion out of the standalone runnable notebook.
+    # Add lesson-specific website controls without a self-link in the download.
     companion = (
         f"\n```{{iframe}} {base_url}/tutor/index.html\n"
         ":title: SPINE Learn lesson companion\n"
@@ -227,12 +287,6 @@ def _write_site_configuration(site: Path) -> None:
                 "style.css",
                 "narration.js",
             ],
-            "downloads": [
-                {
-                    "file": "downloads/reconstruction-basics.ipynb",
-                    "title": "Runnable notebook",
-                }
-            ],
         },
         "site": {
             "title": "SPINE Learn",
@@ -256,7 +310,7 @@ def stage_site(notebook: NotebookNode, require_audio: bool = False) -> Path:
     """Assemble website inputs and return the directory MyST should build.
 
     Publication builds can require current audio for every narration chunk.
-    Preview builds instead show a transcript and a message for missing audio.
+    Preview builds offer a transcript download and a message for missing audio.
     """
     document, configuration, dictionary = load_inputs()
     audio = current_audio(document, configuration, dictionary)
@@ -276,11 +330,27 @@ def stage_site(notebook: NotebookNode, require_audio: bool = False) -> Path:
             shutil.rmtree(path)
         path.mkdir()
     shutil.copy(NOTEBOOK_PATH, site / "downloads")
+    # The collection currently has one lesson; package the same portable export.
+    with zipfile.ZipFile(
+        site / "downloads/spine-learn-notebooks.zip", "w", zipfile.ZIP_DEFLATED
+    ) as archive:
+        archive.write(NOTEBOOK_PATH, NOTEBOOK_PATH.name)
+        archive.writestr(
+            "README.txt",
+            'Install: pip install "spine[viz]"\n'
+            "Open the notebook in Jupyter or VS Code and run cells in order.\n"
+            "The sample is downloaded from public S3DF storage on first run.\n",
+        )
 
     for chunk in document["chunks"]:
+        # Plain UTF-8 text keeps each transcript portable and accessible offline.
+        transcript_path = (
+            site / "downloads" / f"spine-learn-{chunk['id']}-transcript.txt"
+        )
+        transcript_path.write_text(chunk["text"].strip() + "\n", encoding="utf-8")
         player_path = site / "players" / f"{chunk['id']}.html"
         player_path.write_text(
-            player_html(chunk, audio.get(chunk["id"]), document["review_status"]),
+            player_html(chunk, audio.get(chunk["id"])),
             encoding="utf-8",
         )
         if chunk["id"] in audio:

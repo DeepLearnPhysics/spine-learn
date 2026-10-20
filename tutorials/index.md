@@ -21,31 +21,46 @@ site:
 Living tutorials for particle reconstruction and analysis.
 ::::
 
-A living tutorial should evolve with the software it teaches. Start with one
-small, executable lesson: move from points to particle candidates, then inspect
-an interaction and build your first selection.
+SPINE Learn helps you understand how particle-detector data becomes reconstructed
+particles and interactions, and how to use those objects in an analysis.
+It connects the ideas behind SPINE with code you can inspect, run, and adapt
+to your own questions.
 
-## Start with the objects
+## Understand what you are working with
+
+A reconstruction is more than a collection of labels. What does a particle
+object represent? How are particles grouped into an interaction? Which
+properties come from the detector, which are inferred, and which assumptions
+enter an analysis selection?
+
+The goal of SPINE Learn is to make those connections explicit, so you can
+reason about the objects and decisions in your analysis.
+
+## Learn by exploring
+
+Each lesson develops one idea through a worked example. Read the explanation,
+inspect the result, then change something and predict what will happen.
+Exercises invite you to test your understanding and explain what you observe.
+
+Follow the lessons at your own pace. Optional narration introduces each section;
+the written material provides the full explanation. Each lesson includes its own
+runnable notebook, so you can try the examples and explore your own variations.
+
+As SPINE evolves, the aim is to keep these lessons useful alongside it:
+a shared learning resource you can return to as your questions grow.
+
+## Start learning
 
 [**From points to particles to interactions →**](lesson.ipynb)
 
-20 minutes · Python and NumPy basics · CPU only · No detector data required
+20 minutes · Python and NumPy basics · CPU only
 
-You will work with real SPINE classes and a deliberately synthetic event.
-Listen to a short introduction at each section, inspect the executed examples,
-and use **Continue** when you are ready. Audio is optional; transcripts and the
-written lesson carry the complete learning experience.
+Begin with SPINE's particle and interaction objects. Use a small simulated event
+to explore their properties, see how they relate to one another, and build your
+first selection. The notebook downloads a small reconstructed sample; no trained
+models or GPU are needed.
 
-[Download the runnable notebook](downloads/reconstruction-basics.ipynb)
+[Download all notebooks (.zip)](downloads/spine-learn-notebooks.zip)
 
-## A lesson you can maintain
-
-One MyST Markdown source produces the website and notebook. Code executes at
-build time. Separately versioned narration produces cached local speech.
-The narration in this first prototype is **an AI-assisted draft awaiting expert
-review**. This is an object-interface lesson, not a reconstruction benchmark.
-
-The exported notebook runs locally after installing the repository requirements.
-The website displays executed results; it does not connect to a live kernel.
-
-[Setup and authoring guide](https://github.com/DeepLearnPhysics/spine-learn)
+For installation instructions and ways to contribute, visit the
+[SPINE Learn repository](https://github.com/DeepLearnPhysics/spine-learn).

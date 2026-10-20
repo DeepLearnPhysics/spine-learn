@@ -107,6 +107,16 @@ def _validate_document(document: dict[str, Any], anchors: list[str]) -> None:
         if not isinstance(text, str) or not text.strip():
             raise ConfigurationError(f"{chunk_id}: narration text must be nonempty")
 
+    # Guided steps must refer to real lesson anchors and existing recordings.
+    for chunk in chunks:
+        for field in ("focus", "next_step"):
+            if field in chunk and chunk[field] not in anchors:
+                raise ConfigurationError(f"{chunk['id']}: unknown {field} anchor")
+        if "next_chunk" in chunk and chunk["next_chunk"] not in seen_ids:
+            raise ConfigurationError(f"{chunk['id']}: unknown next_chunk")
+        if "next_step" in chunk and not chunk.get("continue_label", "").strip():
+            raise ConfigurationError(f"{chunk['id']}: continue_label is required")
+
 
 def _validate_config(configuration: dict[str, Any]) -> None:
     """Reject unsupported backends, unpinned models, and invalid speech settings."""

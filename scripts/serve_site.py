@@ -5,9 +5,12 @@ caching makes each refresh reflect the latest build, including layout changes.
 """
 
 import argparse
+import os
+import re
 from functools import partial
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
+from typing import BinaryIO
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -15,8 +18,74 @@ ROOT = Path(__file__).resolve().parents[1]
 class PreviewHandler(SimpleHTTPRequestHandler):
     """Serve static files with caching disabled for local development."""
 
+    def send_head(self) -> BinaryIO | None:
+        """Support single byte ranges so browsers can seek within audio files.
+
+        Delegate ordinary requests, directory redirects, and missing files to
+        the standard handler. Unsupported ranges fall back to a full response.
+        """
+        self._range_remaining: int | None = None
+        range_header = self.headers.get("Range", "")
+        match = re.fullmatch(r"bytes=(\d*)-(\d*)", range_header)
+        path = Path(self.translate_path(self.path))
+        if (
+            self.command != "GET"
+            or not match
+            or not any(match.groups())
+            or self.headers.get("If-Range")
+            or not path.is_file()
+        ):
+            return super().send_head()
+
+        try:
+            source = path.open("rb")
+        except OSError:
+            return super().send_head()
+
+        size = os.fstat(source.fileno()).st_size
+        first, last = match.groups()
+        if first:
+            start = int(first)
+            end = min(int(last), size - 1) if last else size - 1
+        else:
+            # A suffix range asks for the final N bytes of the representation.
+            start = max(0, size - int(last))
+            end = size - 1
+
+        if start > end or start >= size:
+            source.close()
+            self.send_response(416)
+            self.send_header("Content-Range", f"bytes */{size}")
+            self.send_header("Content-Length", "0")
+            self.end_headers()
+            return None
+
+        source.seek(start)
+        self._range_remaining = end - start + 1
+        self.send_response(206)
+        self.send_header("Content-Type", self.guess_type(str(path)))
+        self.send_header("Content-Range", f"bytes {start}-{end}/{size}")
+        self.send_header("Content-Length", str(self._range_remaining))
+        self.end_headers()
+        return source
+
+    def copyfile(self, source: BinaryIO, outputfile: BinaryIO) -> None:
+        """Copy only the requested bytes, without loading a whole WAV into memory."""
+        if self._range_remaining is None:
+            super().copyfile(source, outputfile)
+            return
+
+        remaining = self._range_remaining
+        while remaining:
+            block = source.read(min(64 * 1024, remaining))
+            if not block:
+                break
+            outputfile.write(block)
+            remaining -= len(block)
+
     def end_headers(self) -> None:
         """Ensure the browser requests current files on every page refresh."""
+        self.send_header("Accept-Ranges", "bytes")
         self.send_header("Cache-Control", "no-store")
         super().end_headers()
 

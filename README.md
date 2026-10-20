@@ -31,7 +31,7 @@ To add narration:
 ```bash
 make tts-image             # build once; repeat after editing tts/ dependencies
 mkdir -p .cache/kokoro
-make narration             # four semantic chunks, local CPU Kokoro
+make narration             # five semantic chunks, local CPU Kokoro
 make narration             # unchanged chunks are skipped before loading Kokoro
 make narration-status
 make site                  # incorporates current audio and transcripts
@@ -102,13 +102,29 @@ must be evaluated with a real key and representative learner questions.
 
 **From points to particles to interactions** is a 20-minute introduction to
 `RecoParticle`, `RecoInteraction`, class labels, units, primary flags, topology,
-and an explicit candidate selection. Four sections contain five executed code
+and an explicit candidate selection. Four sections contain six executed code
 cells, assertions, a figure, predictions, and exercises.
 
-The notebook constructs two short point groups using the real SPINE classes.
-Everything in this fixture is synthetic and defined in the notebook: no
-experiment data, model inference, detector simulation, calibration, or physics
-performance claim. SPINE's class indices are kept distinct from PDG codes.
+The notebook reads a 1.6 MB generic-simulation sample from public S3DF storage,
+checks its SHA-256, and restores stored particle/interaction associations with
+SPINE 1.4.0. Entry 0 provides 2,228 points, nine particles, and three interactions.
+The sample was written by SPINE 0.9.5; this is recorded provenance, not the version
+learners must install. No model inference is run in the lesson. Reconstructed
+labels are distinguished from simulation truth. See `data/README.md` for the
+source, checksum, and update procedure.
+
+The first section prototypes guided narration: `orientation` introduces a
+prediction, highlights `orientation-activity` when playback ends, and waits for
+an explicit learner action before playing `orientation-explanation`. That clip
+highlights the next section on completion but does not start another recording.
+Scrolling is opt-in, keyboard focus is never moved automatically, and the same
+activity and explanation are available in writing. The remaining sections have
+short draft narration; they are not yet expanded into full guided sequences.
+
+Narration YAML can set `focus`, `next_step`, `next_chunk`, and `continue_label`.
+Anchors and clip references are validated at build time. Changing only these
+navigation fields does not regenerate speech. Browser playback errors retain
+Play controls and downloadable transcripts as fallbacks.
 
 ## One source, several artifacts
 
@@ -135,11 +151,14 @@ explicit. This adds a small staging script, but keeps one source and one executi
 path for both website outputs and the downloadable notebook.
 
 Audio players use tiny same-origin HTML iframes because MyST supports them
-natively. Transcripts stay in the main accessible document. Continue links use
-ordinary anchors and do not verify execution, autoplay, or hide lesson content.
-A small local script handles playback speed choices and fits each player to its
-controls. Speed buttons and an audio download link stay visible, avoiding native
-popup menus clipped by iframe boundaries. Serve the HTML over HTTP; the site's routing
+natively. Each compact toolbar has an expandable settings panel with matching
+buttons for speed, optional step-following, and audio/transcript downloads.
+Transcripts are UTF-8 text files; the lesson's written explanations remain visible.
+Editorial review status stays in source metadata, not in the learner-facing UI.
+One continuous orange gutter line spans the active step, including code and outputs.
+A matching accent identifies the controlling audio player.
+Continue links use ordinary anchors and do not verify execution or hide content.
+A small local script fits each iframe to its controls, including expanded settings. Serve the HTML over HTTP; the site's routing
 and assets are not intended for `file://` viewing.
 
 ## Python development and VS Code
@@ -214,7 +233,7 @@ freshness, not pedagogical staleness relative to the tutorial.
 
 | Location | Purpose |
 | --- | --- |
-| `tutorials/` | Canonical MyST lesson, including the entire synthetic fixture |
+| `tutorials/` | Canonical MyST lesson with sample download and analysis |
 | `narration/` | Draft scripts, pronunciation dictionary, pinned voice/model config |
 | `spine_learn/build.py` | Export, execution, staging, and static-site build |
 | `spine_learn/narration.py` | Validation, hashing, cache, status, and CLI |
@@ -231,7 +250,7 @@ freshness, not pedagogical staleness relative to the tutorial.
 
 | Command | Result |
 | --- | --- |
-| `make notebook` | `_build/notebooks/reconstruction-basics.ipynb`, executed |
+| `make notebook` | `_build/notebooks/01_points_particles_interactions.ipynb`, executed |
 | `make site` | `_build/site/_build/html/`, includes available current audio |
 | `make serve` | Local preview on port 8000 |
 | `make lint` | Ruff lint/format, Pyright, and tutorial cell checks |
