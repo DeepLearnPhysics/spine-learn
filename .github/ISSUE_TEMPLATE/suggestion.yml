@@ -1,0 +1,24 @@
+name: Suggest a lesson or improvement
+description: Request a topic, a clearer example, an exercise, or coverage of SPINE functionality.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Help us understand what you want to learn. Suggestions are public; use public examples rather than private research data.
+  - type: textarea
+    id: goal
+    attributes:
+      label: What would you like to learn or do?
+      description: Describe your task or question and what the current tutorials are missing.
+    validations:
+      required: true
+  - type: input
+    id: related
+    attributes:
+      label: Related lesson or SPINE functionality
+      description: Link to an existing lesson, documentation, or feature if relevant. New topics are welcome too.
+  - type: textarea
+    id: approach
+    attributes:
+      label: What would help?
+      description: For example, a worked example, a different explanation, an exercise, narration, or a new lesson. Tell us your starting knowledge if useful.

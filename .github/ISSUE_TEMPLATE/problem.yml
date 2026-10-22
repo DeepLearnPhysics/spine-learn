@@ -1,0 +1,32 @@
+name: Report a tutorial problem
+description: Code fails, an explanation is unclear or incorrect, or the website misbehaves.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports are public. Remove API keys, credentials, and private research data from errors and screenshots.
+        You do not need to know whether the problem is in SPINE or the tutorial; start here.
+  - type: input
+    id: lesson
+    attributes:
+      label: Lesson or page
+      description: Paste the page URL or notebook name and the section or cell, if known.
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What went wrong?
+      description: What did you expect, and what happened instead? For unclear content, tell us where you got stuck.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps and error output
+      description: For a technical problem, include the command or cell and the relevant error text. A small reproducible example helps.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Your environment
+      description: For code problems, include OS, Python and SPINE versions, installation command, and whether you use Jupyter, VS Code, or another tool. For website problems, include browser and device. Share what you know; no need to collect everything.

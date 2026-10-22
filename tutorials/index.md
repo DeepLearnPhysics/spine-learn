@@ -64,3 +64,14 @@ models or GPU are needed.
 
 For installation instructions and ways to contribute, visit the
 [SPINE Learn repository](https://github.com/DeepLearnPhysics/spine-learn).
+
+## Help improve SPINE Learn
+
+Something not working, an explanation missing a step, or a topic you would like
+to learn? [Report a problem](https://github.com/DeepLearnPhysics/spine-learn/issues/new?template=problem.yml) or [suggest an improvement](https://github.com/DeepLearnPhysics/spine-learn/issues/new?template=suggestion.yml).
+You do not need to diagnose the cause: tell us which lesson you are using and
+where you got stuck. You can also [browse existing reports](https://github.com/DeepLearnPhysics/spine-learn/issues).
+
+Reports are public and require a GitHub account. Leave out credentials and
+private data. The lesson companion helps with questions, but it does not send
+reports to the maintainers.

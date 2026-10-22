@@ -10,6 +10,26 @@ repository each year makes fixes hard to propagate. Here, a small teaching unit
 has one diffable source, executable checks, and separately editable narration.
 The immediate scope is one complete lesson, not a course platform.
 
+## Questions, problems, and suggestions
+
+Use [SPINE Learn issues](https://github.com/DeepLearnPhysics/spine-learn/issues)
+for code that does not run, unclear or incorrect explanations, website problems,
+and requests for new tutorials or SPINE functionality to cover.
+[Report a problem](https://github.com/DeepLearnPhysics/spine-learn/issues/new?template=problem.yml) or [suggest an improvement](https://github.com/DeepLearnPhysics/spine-learn/issues/new?template=suggestion.yml) using the corresponding form. Search existing issues first; adding details to
+an existing report helps keep the discussion together. A GitHub account is needed
+to submit an issue.
+
+For execution problems, include the lesson and cell, relevant error output, and
+what you know about your Python/SPINE versions and installation. Reports are
+public: remove API keys, credentials, and private data. If you are unsure whether
+a problem belongs to SPINE or the lesson, report it here; maintainers can help
+identify the right place for a fix.
+
+The lesson companion can help explain the material, but chatting with it does not
+file an issue or notify maintainers. Use an issue when you want a problem or
+suggestion tracked. Maintainers can watch this repository's Issues notifications
+in GitHub to receive reports without a separate support inbox or Slack channel.
+
 ## Start locally
 
 Use Python 3.12 and Docker (Docker is needed only for speech synthesis).
