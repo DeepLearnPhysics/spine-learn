@@ -1,4 +1,8 @@
-# First-pass implementation report
+# Historical first-pass implementation report
+
+> Archived development record. Version numbers, publication status, and pending
+> work below describe the original implementation, not the current release.
+> See [the README](README.md) for current capabilities and deployment instructions.
 
 This report records the original local first pass tested on 2026-10-07.
 Later changes are recorded in the follow-up notes below. The repository now contains a working executable

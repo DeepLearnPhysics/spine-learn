@@ -45,10 +45,10 @@ def inputs() -> NarrationInputs:
 
 
 def test_yaml_and_mapping(inputs: NarrationInputs) -> None:
-    """Accept the real guided draft narration and its section mapping."""
+    """Accept the published guided narration and its section mapping."""
     document, _, _ = inputs
     assert len(document["chunks"]) == 5
-    assert document["review_status"] == "draft"
+    assert document["review_status"] == "reviewed"
 
 
 @pytest.mark.parametrize(

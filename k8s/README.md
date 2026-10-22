@@ -4,6 +4,48 @@ The application serves the website and `/api/tutor/*` on one origin:
 `https://spine-learn.slac.stanford.edu`. Deploy from an authenticated S3DF session
 using the `neutrino-ml` context. The local Mac need not have a kubeconfig.
 
+## Update an existing deployment
+
+For routine updates, reuse the existing namespace, Gemini Secret, Service, and
+HTTPRoute. Complete [GitHub CLI setup](#github-cli-setup-on-s3df) if this shell is
+not authenticated, then select the successful release you want to deploy:
+
+```bash
+gh run list --repo DeepLearnPhysics/spine-learn \
+  --workflow narration.yml --branch main --status success --limit 5
+```
+
+Use the **ID** column for the intended commit. Wait for the `publish-s3df` job to
+succeed and provide `s3df-release`; a successful validation job alone is not a
+release. Download into a fresh directory to avoid mixing releases:
+
+```bash
+read -r -p "Successful Narrated site run ID: " run_id
+release_dir=$(mktemp -d /tmp/spine-learn-release.XXXXXX)
+gh run download "$run_id" --repo DeepLearnPhysics/spine-learn \
+  --name s3df-release --dir "$release_dir"
+```
+
+After a successful download, these are the deployment commands:
+
+```bash
+kubectl --context neutrino-ml apply -k "$release_dir"
+kubectl --context neutrino-ml -n spine-learn rollout status deployment/spine-learn --timeout=180s
+kubectl --context neutrino-ml -n spine-learn get pods
+curl --fail https://spine-learn.slac.stanford.edu/readyz
+```
+
+The new image digest triggers the rollout; no separate `rollout restart` is
+needed. Do not recreate the namespace or Gemini Secret. The single-replica
+`Recreate` strategy causes a brief interruption. After rollout, refresh the
+lesson and check playback, notebook download, and one chat response. If you used
+temporary GitHub authentication, [clean it up](#remove-temporary-github-authentication).
+To roll back manually, repeat these steps with an earlier successful run.
+
+These instructions apply while releases are deployed manually. If a GitOps
+controller is later enabled, update its desired release instead of applying a
+competing manual version.
+
 ## Release flow
 
 1. The existing **Narrated site** workflow runs checks, executes the lesson, and
@@ -28,10 +70,29 @@ Alternatively, configure S3DF-approved registry pull credentials in both the
 workload and Flux source; never use the Gemini Secret for registry authentication.
 
 This repository prepares Flux resources but does not install cluster controllers.
-Confirm with Micha that the controllers support `source.toolkit.fluxcd.io/v1`
+Confirm with the S3DF platform team that the controllers support `source.toolkit.fluxcd.io/v1`
 `OCIRepository`, watch `spine-learn`, allow the specified reconciler service account,
 and can pull from GHCR. If S3DF manages Flux centrally, give them `flux/sync.yaml`
 to adapt rather than installing a second controller stack.
+
+## GitHub CLI setup on S3DF
+
+Load the available module and authenticate before downloading a release. For an
+occasional manual deployment, use a temporary configuration directory so the
+GitHub credential does not remain in your home or shared checkout:
+
+```bash
+module load githubcli
+export GH_CONFIG_DIR=$(mktemp -d /tmp/spine-learn-gh.XXXXXX)
+gh auth login --hostname github.com --git-protocol https --web
+```
+
+Open the displayed URL in your laptop's browser and enter the code. If asked to
+authenticate Git too, choose **No**; artifact downloads do not need Git credential
+configuration. If no system credential store is available, `gh` may warn that it
+will save the token as plain text in this temporary, private directory. Continue
+in the same shell so the download uses this configuration. Cleanup commands are
+provided immediately after the download below.
 
 ## First rollout from S3DF
 
@@ -62,17 +123,49 @@ Secret; cluster administrators and users allowed to read Secrets or control the
 application's pods can still access the credential. Keep the key out of Git,
 chat, and screenshots.
 
-The namespace is proposed as `spine-learn`; confirm it is allowed in the vcluster.
+The deployment uses the `spine-learn` namespace in the `neutrino-ml` vcluster.
 The current deployment uses public sample URLs and needs no PVC or filesystem
 mount. Filesystem permissions can be added separately when lessons need them.
 
-Download **s3df-release** from the successful Narrated site workflow for the
-chosen commit. With GitHub CLI (replace `RUN_ID` with that workflow run's ID):
+Download **s3df-release** from a successful **Narrated site** run for the
+commit you want to deploy. List recent successful runs:
 
 ```bash
+gh run list --repo DeepLearnPhysics/spine-learn \
+  --workflow narration.yml --branch main --status success --limit 5
+```
+
+Use the number in the **ID** column as `RUN_ID` below. You can also find it in
+the browser: open **Actions → Narrated site → the successful run**. The number
+at the end of `https://github.com/DeepLearnPhysics/spine-learn/actions/runs/NUMBER`
+is the run ID (not the commit SHA or the workflow's sequential run number).
+For example, `/actions/runs/39796096951` means `RUN_ID` is `39796096951`.
+Choose a run that includes a successful `publish-s3df` job and the `s3df-release`
+artifact, not a **Validate tutorial** run.
+
+Replace `RUN_ID` with that number when downloading:
+
+```bash
+release_dir=$(mktemp -d /tmp/spine-learn-release.XXXXXX)
 gh run download RUN_ID --repo DeepLearnPhysics/spine-learn \
-  --name s3df-release --dir /tmp/spine-learn-release
-kubectl apply -k /tmp/spine-learn-release
+  --name s3df-release --dir "$release_dir"
+```
+
+### Remove temporary GitHub authentication
+
+After the download succeeds, remove the temporary GitHub authentication. Also
+run this cleanup if you abandon the deployment after logging in:
+
+```bash
+gh auth logout --hostname github.com
+rm -rf -- "${GH_CONFIG_DIR:?}"
+unset GH_CONFIG_DIR
+```
+
+Deploy the downloaded release (GitHub authentication is no longer needed):
+
+```bash
+kubectl apply -k "$release_dir"
 kubectl -n spine-learn rollout status deployment/spine-learn --timeout=180s
 kubectl -n spine-learn get pods,service,httproute
 kubectl -n spine-learn describe httproute spine-learn
@@ -87,7 +180,7 @@ release bundle contains the actual tested digest. For local rendering, use:
 ```
 
 The HTTPRoute deliberately omits `parentRefs`: S3DF's Kyverno policy injects them,
-as advised by Micha. It also omits `auth.sdf.slac.stanford.edu/required` because
+as configured by the S3DF platform team. It also omits `auth.sdf.slac.stanford.edu/required` because
 this is a public learning site. Check the route's `Accepted` and `ResolvedRefs`
 conditions and confirm the injected parent references before diagnosing a 404.
 
@@ -152,7 +245,7 @@ allows one in-flight generation, six requests per minute, and 200 per UTC day
 per process (including connection checks). These are application safeguards,
 not a provider billing cap: counters reset on process/pod restart. Keep the
 Gemini project on the intended provider quota/billing configuration. There is no
-user authentication or per-user allowance in this public demonstrator.
+user authentication or per-user allowance in this public service.
 
 Use one replica and the supplied `Recreate` strategy so a rollout does not run
 two independent tutor budgets. Updates cause a brief interruption. A shared,

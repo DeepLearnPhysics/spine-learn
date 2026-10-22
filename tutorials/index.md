@@ -42,12 +42,27 @@ Each lesson develops one idea through a worked example. Read the explanation,
 inspect the result, then change something and predict what will happen.
 Exercises invite you to test your understanding and explain what you observe.
 
-Follow the lessons at your own pace. Optional narration introduces each section;
-the written material provides the full explanation. Each lesson includes its own
+Follow the lessons at your own pace. Optional narration offers spoken guidance,
+pauses for reflection, and prompts to explore; the written material provides the
+full explanation. Each lesson includes its own
 runnable notebook, so you can try the examples and explore your own variations.
 
-As SPINE evolves, the aim is to keep these lessons useful alongside it:
-a shared learning resource you can return to as your questions grow.
+On the full SPINE Learn site, **Ask SPINE** helps explain the current lesson and
+offers hints when you get stuck. Use its answers alongside the written material
+and executable examples; the companion does not run your notebook.
+
+## Built to grow with SPINE
+
+The collection begins with one complete lesson on reconstructed particles and
+interactions. Further lessons will extend this foundation to more reconstruction
+and analysis tasks.
+
+Each lesson's code and explanations are maintained together in version control.
+Automated checks execute the examples before publication, and the same source
+produces the website and downloadable notebook. Narration is maintained alongside
+the written material, so both can evolve with the software. The goal is a shared
+learning resource that improves over time, informed by the questions and needs
+of its users.
 
 ## Start learning
 

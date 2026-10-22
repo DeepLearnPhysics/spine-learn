@@ -1,14 +1,28 @@
 # SPINE Learn
 
-An executable, narrated lesson that can evolve with the software it teaches.
-This first prototype targets **SPINE 1.4.1**, installed directly from PyPI with
-`pip install "spine[viz]==1.4.1"`. Most basic SPINE work needs only a normal pip
-installation; the lesson does not need a neural-network runtime or GPU.
+SPINE Learn is a learning resource for particle reconstruction and analysis:
+executable tutorials, guided narration, interactive event displays, and a
+lesson-aware AI companion.
+
+**[Open SPINE Learn](https://spine-learn.slac.stanford.edu/)** ·
+[Start the first lesson](https://spine-learn.slac.stanford.edu/lesson) ·
+[Deployment guide](k8s/README.md)
+
+The initial collection contains one complete lesson, **From points to particles
+to interactions**. It establishes a repeatable approach for a broader curriculum:
+authored explanations and code produce both the website and runnable notebooks;
+continuous integration executes the examples; version-controlled narration and
+pronunciation settings keep audio maintainable alongside the written material.
 
 Workshops and recorded lectures are valuable, but copying notebooks into a new
-repository each year makes fixes hard to propagate. Here, a small teaching unit
-has one diffable source, executable checks, and separately editable narration.
-The immediate scope is one complete lesson, not a course platform.
+repository each year makes fixes hard to propagate. SPINE Learn keeps the material
+in one shared source so improvements can carry forward as the software evolves.
+The next priority is to expand the lesson collection and evaluate how well the
+combined written, spoken, and interactive material supports learners.
+
+The lesson uses **SPINE 1.4.1**, installed from PyPI with
+`pip install "spine[viz]==1.4.1"`. It reads existing reconstruction output and
+requires no neural-network runtime or GPU.
 
 ## Questions, problems, and suggestions
 
@@ -45,7 +59,7 @@ need internet access. Subsequent speech synthesis uses local cached model files.
 python3.12 -m venv .venv
 .venv/bin/pip install -r requirements.txt
 make test narration-check
-make notebook              # export AND execute all five cells
+make notebook              # export AND execute all six cells
 make site                  # execute, render; audio is optional
 make serve                 # http://localhost:8000
 ```
@@ -62,15 +76,15 @@ make site                  # incorporates current audio and transcripts
 make serve
 ```
 
-The initial narration is **AI-assisted draft text for expert review**, created
-with the maintainer's explicit approval. Edit it directly; no LLM runs in the
-build pipeline. Set `review_status: reviewed` after your review. That label does
-not change the synthesized speech or force a rebuild.
+Narration is maintained as version-controlled text and synthesized locally.
+Its authoring used AI assistance with maintainer review; no LLM rewrites the
+scripts during builds. Review the corresponding narration whenever a lesson
+changes. Editorial metadata does not change the speech or force a rebuild.
 
 ## Try the embedded lesson companion locally
 
-The lesson includes a floating **Ask SPINE** panel. This is
-an optional local demonstrator: it explains the canonical lesson using Gemini,
+The lesson includes a floating **Ask SPINE** panel, available on the S3DF-hosted
+website and in the local preview. It explains the canonical lesson using Gemini,
 offers hints, and supports follow-up questions. It cannot run code or inspect
 local notebooks. The runnable notebook remains independent of the chat.
 
@@ -81,7 +95,7 @@ make tutor                  # http://127.0.0.1:8002/lesson
 ```
 
 Create your key in [Google AI Studio](https://aistudio.google.com/api-keys), using
-a project on the **Free** tier. No billing setup is needed for this demonstrator.
+a project with the quota and billing settings you intend to use.
 The code does not enable or upgrade billing; a key from a paid project is still
 billed according to that project's settings. The default model is
 `gemini-3.1-flash-lite`; select another model available to your project with
@@ -107,7 +121,7 @@ and up to six recent exchanges (at most 24,000 history characters) to Google.
 The server does not save prompts or responses. Google's own data handling terms
 apply; use public lesson material rather than confidential research data.
 
-The local backend accepts one request at a time, at most six per minute and 200
+The backend accepts one request at a time, at most six per minute and 200
 per UTC day **per process**. Restarting resets these local counters. These limits
 are separate from Google's account/model quotas, not a guarantee of free-tier
 capacity. Provider quota errors leave the question available to retry; the app
@@ -118,11 +132,11 @@ inspection in browser developer tools; no extra logging infrastructure is needed
 port 8002. It rejects foreign Host/Origin headers and bounds request sizes. It
 uses Python's standard library, so there are no new runtime dependencies.
 The existing `make serve` remains a static preview; its chat displays setup help.
-A GitHub Pages build alone cannot answer questions; the panel explains that
-public chat is not available yet and hides the inactive form. Public deployment of
-the backend, durable quotas, and remote endpoint configuration are future work.
-Tests mock provider responses and never spend API quota; actual teaching quality
-must be evaluated with a real key and representative learner questions.
+The S3DF deployment serves the site and chat API together using Flask and Gunicorn.
+GitHub Pages hosts a static edition; its chat panel directs learners to the full
+site. Tests mock provider responses and never spend API quota. Evaluating answer
+quality with representative learner questions remains an ongoing editorial task;
+a successful API response alone does not establish teaching quality.
 
 ## The first lesson
 
@@ -139,13 +153,14 @@ learners must install. No model inference is run in the lesson. Reconstructed
 labels are distinguished from simulation truth. See `data/README.md` for the
 source, checksum, and update procedure.
 
-The first section prototypes guided narration: `orientation` introduces a
+The first section uses guided narration: `orientation` introduces a
 prediction, highlights `orientation-activity` when playback ends, and waits for
 an explicit learner action before playing `orientation-explanation`. That clip
 highlights the next section on completion but does not start another recording.
 Scrolling is opt-in, keyboard focus is never moved automatically, and the same
-activity and explanation are available in writing. The remaining sections have
-short draft narration; they are not yet expanded into full guided sequences.
+activity and explanation are available in writing. Later sections use shorter
+spoken guidance. Additional guided exercises can build on the same navigation
+and playback controls.
 
 Narration YAML can set `focus`, `next_step`, `next_chunk`, and `continue_label`.
 Anchors and clip references are validated at build time. Changing only these
@@ -221,7 +236,7 @@ second installation of Torch or Kokoro just to inspect the code.
 
 ```yaml
 tutorial: reconstruction-basics
-review_status: draft
+review_status: reviewed
 chunks:
   - id: inspect-particles
     section: inspect-particles
@@ -230,6 +245,7 @@ chunks:
       Its size counts indexed points; inspect its units too.
 ```
 
+Set `review_status` to `reviewed` only after a maintainer has reviewed the script.
 Map `section` to a stable `(inspect-particles)=` anchor in the tutorial. Use
 semantic chunks of a few sentences, not one file per sentence. Narration should
 add pacing and instructor context. Keep essential explanations and exercises in
@@ -238,9 +254,10 @@ duplicate YAML keys, unsafe IDs, malformed text, and invalid configuration.
 
 `narration/pronunciations.yaml` changes spoken text only. Matching is
 case-sensitive, longest-first, bounded by non-word characters, and nonrecursive.
-For example, `HDF5` becomes `H D F five`; it will not match `HDF50`.
-Plain spelling expansions are intentionally simple; phonetic/SSML controls and
-context-sensitive pronunciation are not implemented.
+For example, `HDF5` uses a connected phonetic pronunciation; it will not match
+`HDF50`. The dictionary supports spelling replacements and Kokoro/Misaki phonetic
+annotations. These affect speech only; written transcripts retain the original
+technical terms.
 
 A chunk's SHA-256 includes whitespace-normalized original text, expanded text,
 **the dictionary entries actually used**, backend, immutable model revision,
@@ -260,7 +277,7 @@ freshness, not pedagogical staleness relative to the tutorial.
 | Location | Purpose |
 | --- | --- |
 | `tutorials/` | Canonical MyST lesson with sample download and analysis |
-| `narration/` | Draft scripts, pronunciation dictionary, pinned voice/model config |
+| `narration/` | Narration scripts, pronunciation dictionary, pinned voice/model config |
 | `spine_learn/build.py` | Export, execution, staging, and static-site build |
 | `spine_learn/narration.py` | Validation, hashing, cache, status, and CLI |
 | `spine_learn/kokoro_backend.py` | Lazy CPU Kokoro adapter |
@@ -314,30 +331,31 @@ fork, select **Settings → Pages → Build and deployment → GitHub Actions**.
 paths, including iframe players. Publication target:
 [SPINE Learn](https://www.deeplearnphysics.org/spine-learn/).
 
-The initial prototype is the baseline for a more realistic lesson. Generated
-notebooks, executed outputs, speech files, and model caches stay out of Git;
+Generated notebooks, executed outputs, speech files, and model caches stay out of Git;
 GitHub Actions rebuilds the publication from the authored sources.
 
-## Limitations and next pass
+## Current scope and development priorities
 
-See [the first-pass report](FIRST_PASS_REPORT.md) for measured execution and audio
-results, and [TTS notes](tts/README.md) for dependencies and licensing sources.
+The complete reading, notebook, narration, visualization, feedback, and chat
+workflow is available for the initial lesson. Expanding the curriculum is the
+main development priority: additional reconstruction and analysis tasks, more
+worked examples, and exercises at different levels of experience.
 
-Expert review of the draft narration and an audible terminology check are still
-needed. The header and narration controls were checked in an isolated browser at desktop
-and phone widths. This inspection captures only the tutorial page, not the desktop.
-The build pins direct Python dependencies, SPINE, and model revision; transitive
-packages and the upstream MyST theme can still evolve. WAV is deliberately simple
-but larger than compressed delivery audio. Cache files are not automatically
-pruned. Offline operation requires previously downloaded dependencies and theme.
-The helpers currently target one tutorial rather than pretending to be a framework.
+Further work includes learner evaluation, systematic review of AI answers,
+richer instructor-style narration, and release-aligned maintenance across lessons.
+The build currently stages one lesson; adding a collection also requires
+extending lesson discovery, navigation, and per-lesson companion context.
 
-Next: review the lesson and voice, track section changes
-for narration review, and add a small real-output reading lesson. Later options
-include Chatterbox, consented instructor voice cloning, richer phonetics and
-languages, optional guided progress, browser exercises, Binder/JupyterHub launch,
-release-aligned course versions, and reuse beyond SPINE. None needs to complicate
-this first lesson's authoring workflow.
+Operational limits are explicit: chat does not execute notebooks, its quotas
+are process-local, and the single-replica deployment briefly interrupts service
+during updates. See the [deployment guide](k8s/README.md) for details. Direct
+Python dependencies, SPINE, and the speech model revision are pinned; transitive
+packages and the upstream MyST theme can still evolve. Offline builds require
+previously downloaded dependencies and assets.
+
+See [TTS notes](tts/README.md) for synthesis dependencies and licensing sources.
+The [historical implementation report](FIRST_PASS_REPORT.md) records early
+measurements and decisions; it does not describe the current release status.
 
 ## Website colors
 

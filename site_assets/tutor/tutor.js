@@ -41,7 +41,15 @@ async function loadConfiguration() {
         ready = false;
         status.textContent = isLocal ? "Chat is available in the local tutor preview. See setup below." : "The lesson assistant is temporarily unavailable.";
         if (!isLocal) {
-            availability.textContent = "The lesson assistant is not available on this hosted site yet. You can read the full lesson and download its notebook while public chat hosting is being set up.";
+            availability.textContent = "The lesson assistant is unavailable here. Written lessons and notebook downloads remain available.";
+            if (window.location.hostname !== "spine-learn.slac.stanford.edu") {
+                const fullSite = document.createElement("a");
+                fullSite.href = "https://spine-learn.slac.stanford.edu/lesson";
+                fullSite.textContent = "Open SPINE Learn with Ask SPINE";
+                fullSite.target = "_blank";
+                fullSite.rel = "noopener noreferrer";
+                availability.append(document.createElement("br"), fullSite);
+            }
             availability.hidden = false;
             document.body.classList.add("tutor-unavailable");
             frame?.parentElement?.classList.add("tutor-unavailable");

@@ -38,7 +38,7 @@ Verified from upstream pages on 2026-10-07:
   if redistributing them. Its model card also records training-data attributions.
 - [`af_heart` voice](https://huggingface.co/hexgrad/Kokoro-82M/blob/main/VOICES.md):
   distributed in the same model repository. No distinct per-voice license was
-  identified in that document. This prototype therefore keeps voice files, as
+  identified in that document. The synthesis workflow keeps voice files, as
   well as weights, outside the image and does not publish those assets.
 - [spaCy English pipeline 3.8.0](https://github.com/explosion/spacy-models/releases/tag/en_core_web_sm-3.8.0):
   MIT, installed in the image for English grapheme-to-phoneme preprocessing.
@@ -46,7 +46,8 @@ Verified from upstream pages on 2026-10-07:
   this is a separate runtime dependency, not covered by Kokoro's Apache license.
   The local image retains installed package notices. Before publishing an image
   to GHCR, inventory all included packages and satisfy their notice/source
-  distribution obligations. No container registry publishing is implemented.
+  distribution obligations. This synthesis image is built locally and in CI; only the separate application
+  image is published to the container registry.
 
 The repository's workflow publishes a site containing generated narration, not
 model weights or voice tensors. These notes record upstream declarations and

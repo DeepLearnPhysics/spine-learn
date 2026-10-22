@@ -1,7 +1,8 @@
 """Serve the static lesson and a loopback-only Gemini tutor on one origin.
 
-This is a local demonstrator, not a public deployment server. Keeping the API
-on the preview origin avoids CORS configuration and exposing credentials.
+This development server is for local previews; public hosting uses Gunicorn.
+Keeping the API on the preview origin avoids CORS configuration and exposing
+credentials.
 """
 
 import argparse
