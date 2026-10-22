@@ -106,3 +106,21 @@ textarea { min-height: 64px; height: 64px; max-height: 120px; resize: none; font
 #keyboard-hint { font-size: 11px; color: var(--muted); }
 #send { width: 38px; height: 38px; padding: 0; flex-shrink: 0; font-size: 24px; line-height: 1; }
 .tutor-unavailable .conversation-header { display: none; }
+
+/* Keep pending requests visibly active without implying a percentage complete. */
+#feedback[aria-busy="true"]::before {
+    content: "";
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    margin-right: 7px;
+    vertical-align: -2px;
+    border: 2px solid var(--line);
+    border-top-color: var(--spine-orange);
+    border-radius: 50%;
+    animation: tutor-wait 0.8s linear infinite;
+}
+@keyframes tutor-wait { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+    #feedback[aria-busy="true"]::before { animation: none; }
+}

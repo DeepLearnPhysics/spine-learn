@@ -24,6 +24,7 @@ function updateControls() {
     send.setAttribute("aria-label", busy ? "Sending question" : "Send question");
     send.title = busy ? "Sending question" : "Send question (Enter)";
     messages.setAttribute("aria-busy", String(busy));
+    feedback.setAttribute("aria-busy", String(busy));
 }
 
 async function loadConfiguration() {
@@ -60,6 +61,15 @@ async function loadConfiguration() {
     updateControls();
 }
 
+// A delayed status reassures learners without claiming to know provider progress.
+function showWaiting(message) {
+    feedback.className = "";
+    feedback.textContent = message;
+    return window.setTimeout(() => {
+        feedback.textContent = "Taking a little longer — still waiting for Gemini…";
+    }, 10000);
+}
+
 async function checkConnection() {
     await loadConfiguration();
     if (!ready) return;
@@ -67,7 +77,7 @@ async function checkConnection() {
     updateControls();
     reconnect.textContent = "Checking Gemini…";
     status.textContent = "Testing an actual response from Gemini…";
-    feedback.textContent = "";
+    const waiting = showWaiting("Checking the connection to Gemini…");
     try {
         const response = await fetch("/api/tutor/check", {
             method: "POST",
@@ -78,6 +88,7 @@ async function checkConnection() {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || "Connection check failed.");
         status.textContent = `Connected · ${data.model} · Gemini answered successfully.`;
+        feedback.textContent = "Connected. You can ask a question.";
     } catch (error) {
         status.textContent = error.name === "TimeoutError"
             ? "Gemini took too long to respond. Try again."
@@ -85,6 +96,7 @@ async function checkConnection() {
         feedback.textContent = status.textContent;
         feedback.className = "error";
     } finally {
+        window.clearTimeout(waiting);
         busy = false;
         reconnect.textContent = "Check connection";
         updateControls();
@@ -158,8 +170,7 @@ document.querySelector("#chat").addEventListener("submit", async event => {
     updateControls();
     const pending = addMessage("You", text);
     status.textContent = "Thinking about your question…";
-    feedback.className = "";
-    feedback.textContent = status.textContent;
+    const waiting = showWaiting(status.textContent);
     try {
         const response = await fetch("/api/tutor/chat", {
             method: "POST",
@@ -185,6 +196,7 @@ document.querySelector("#chat").addEventListener("submit", async event => {
         feedback.textContent = status.textContent;
         feedback.className = "error";
     } finally {
+        window.clearTimeout(waiting);
         busy = false;
         updateControls();
         question.focus({preventScroll: true});

@@ -124,8 +124,12 @@ apply; use public lesson material rather than confidential research data.
 The backend accepts one request at a time, at most six per minute and 200
 per UTC day **per process**. Restarting resets these local counters. These limits
 are separate from Google's account/model quotas, not a guarantee of free-tier
-capacity. Provider quota errors leave the question available to retry; the app
-never retries automatically. Output is capped at 2,048 tokens. API responses include token usage for
+capacity. An explicit transient HTTP error (500, 502, 503, or 504) is retried
+once after one second, using the remaining 45-second provider timeout budget.
+Both attempts count toward the local limits. Quota, authentication, network
+timeout, and malformed-response failures are not retried automatically. The
+pending indicator stays visible during the request; failed questions remain
+available to retry manually. Output is capped at 2,048 tokens. API responses include token usage for
 inspection in browser developer tools; no extra logging infrastructure is needed.
 
 `scripts/serve_tutor.py` serves both static pages and `/api/tutor/*` on loopback

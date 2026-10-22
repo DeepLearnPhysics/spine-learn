@@ -242,7 +242,9 @@ continues reconciling a newer desired image.
 
 Gunicorn serves Flask with one process and four threads. The existing tutor
 allows one in-flight generation, six requests per minute, and 200 per UTC day
-per process (including connection checks). These are application safeguards,
+per process (including connection checks and retry attempts). Transient upstream
+HTTP errors receive at most one retry after one second within the remaining
+45-second provider timeout budget. These are application safeguards,
 not a provider billing cap: counters reset on process/pod restart. Keep the
 Gemini project on the intended provider quota/billing configuration. There is no
 user authentication or per-user allowance in this public service.

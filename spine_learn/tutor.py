@@ -5,6 +5,7 @@ browser supplies recent conversation turns; the server owns the lesson context.
 """
 
 import json
+import logging
 import os
 import re
 import threading
@@ -21,6 +22,10 @@ KEY_FILE = ROOT / ".gemini-api-key"
 MAX_QUESTION = 4000
 MAX_HISTORY = 12
 MAX_HISTORY_CHARS = 24000
+PROVIDER_TIMEOUT = 45.0
+RETRY_DELAY = 1.0
+TRANSIENT_HTTP_CODES = {500, 502, 503, 504}
+LOGGER = logging.getLogger(__name__)
 INSTRUCTIONS = """You are the SPINE Learn lesson companion for SPINE 1.4.1.
 Explain the supplied lesson, answer follow-up questions, and offer progressive
 hints before full exercise solutions unless the learner explicitly asks for one.
@@ -104,7 +109,7 @@ class LessonTutor:
         return {"connected": True, "model": self.model}
 
     def answer(self, payload: Any) -> dict[str, Any]:
-        """Answer one question, with one in-flight request and no automatic retries."""
+        """Answer one question under a shared lock with one transient retry."""
         contents = validate_messages(payload)
         key = self._api_key()
         if not key:
@@ -116,22 +121,53 @@ class LessonTutor:
                 "The tutor is answering another question. Try shortly.", 429
             )
         try:
-            # These process-local safeguards supplement Google's own project quotas.
-            now = time.monotonic()
-            while self._requests and now - self._requests[0] >= 60:
-                self._requests.popleft()
-            day = time.strftime("%Y-%m-%d", time.gmtime())
-            if day != self._day:
-                self._day, self._daily_count = day, 0
-            if len(self._requests) >= 6 or self._daily_count >= 200:
-                raise TutorError(
-                    "Tutor usage limit reached. Please try again later.", 429
-                )
-            self._requests.append(now)
-            self._daily_count += 1
+            self._reserve_attempt()
             return self._generate(key, contents)
         finally:
             self._lock.release()
+
+    def _reserve_attempt(self) -> None:
+        """Count each provider attempt, including retries, under the request lock."""
+        # These process-local safeguards supplement Google's own project quotas.
+        now = time.monotonic()
+        while self._requests and now - self._requests[0] >= 60:
+            self._requests.popleft()
+        day = time.strftime("%Y-%m-%d", time.gmtime())
+        if day != self._day:
+            self._day, self._daily_count = day, 0
+        if len(self._requests) >= 6 or self._daily_count >= 200:
+            raise TutorError("Tutor usage limit reached. Please try again later.", 429)
+        self._requests.append(now)
+        self._daily_count += 1
+
+    def _request_json(self, request: urllib.request.Request) -> Any:
+        """Retry one explicit transient HTTP failure within the response budget.
+
+        Network timeouts are not retried: the original generation may still be
+        running. Authentication, quota, and malformed-response errors also pass
+        directly to the normal error handling.
+        """
+        deadline = time.monotonic() + PROVIDER_TIMEOUT
+        for attempt in range(2):
+            remaining = deadline - time.monotonic()
+            if remaining <= 0:
+                raise TimeoutError("Provider response budget exhausted")
+            try:
+                with urllib.request.urlopen(request, timeout=remaining) as response:
+                    return json.load(response)
+            except urllib.error.HTTPError as error:
+                error.close()
+                if (
+                    attempt == 1
+                    or error.code not in TRANSIENT_HTTP_CODES
+                    or deadline - time.monotonic() <= RETRY_DELAY
+                ):
+                    raise
+                # Log only a status code, never request bodies, headers, or keys.
+                LOGGER.warning("Gemini HTTP %s; retrying once", error.code)
+                time.sleep(RETRY_DELAY)
+                self._reserve_attempt()
+        raise AssertionError("Provider attempts exhausted without a result")
 
     def _generate(self, key: str, contents: list[dict[str, Any]]) -> dict[str, Any]:
         """Send a text-only request and translate provider failures into safe errors."""
@@ -158,8 +194,7 @@ class LessonTutor:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=45) as response:
-                result = json.load(response)
+            result = self._request_json(request)
         except urllib.error.HTTPError as error:
             # Never return provider error bodies: they may contain request details.
             if error.code == 429:
@@ -180,7 +215,7 @@ class LessonTutor:
                     503,
                 ) from None
             raise TutorError(
-                "Gemini is unavailable. Please try again later.", 502
+                "Gemini is temporarily unavailable. Please try again shortly.", 502
             ) from None
         except (urllib.error.URLError, TimeoutError):
             raise TutorError(

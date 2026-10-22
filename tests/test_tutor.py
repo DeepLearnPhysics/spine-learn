@@ -2,6 +2,7 @@
 
 import io
 import json
+import time
 import urllib.error
 from email.message import Message
 from pathlib import Path
@@ -97,7 +98,7 @@ def test_provider_context_history_and_secret(tutor: LessonTutor) -> None:
 
 
 @pytest.mark.parametrize(
-    "code, expected", [(429, 429), (403, 503), (404, 503), (500, 502)]
+    "code, expected", [(400, 503), (401, 503), (429, 429), (403, 503), (404, 503)]
 )
 def test_provider_failure_is_safe(tutor: LessonTutor, code: int, expected: int) -> None:
     """Do not expose provider error bodies or retry quota failures."""
@@ -143,3 +144,105 @@ def test_connection_checks_generation(tutor: LessonTutor) -> None:
     with patch.object(tutor, "_generate", return_value={"answer": "OK"}) as provider:
         assert tutor.check_connection()["connected"] is True
         provider.assert_called_once()
+
+
+@pytest.mark.parametrize("code", [500, 502, 503, 504])
+def test_transient_error_recovers_once(tutor: LessonTutor, code: int) -> None:
+    """A transient failure is hidden if the one allowed retry succeeds."""
+    failure = urllib.error.HTTPError(
+        "https://example.test", code, "secret", Message(), None
+    )
+    reply = io.BytesIO(b'{"candidates": [{"content": {"parts": [{"text": "OK"}]}}]}')
+    with (
+        patch("urllib.request.urlopen", side_effect=[failure, reply]) as provider,
+        patch("spine_learn.tutor.time.sleep") as sleep,
+    ):
+        assert tutor.check_connection()["connected"] is True
+    assert provider.call_count == 2
+    assert provider.call_args_list[0].args == provider.call_args_list[1].args
+    sleep.assert_called_once_with(1.0)
+    assert tutor._daily_count == 2
+    assert not tutor._lock.locked()
+
+
+def test_persistent_transient_error_stops(tutor: LessonTutor) -> None:
+    """Repeated failures stop after two attempts and release the request lock."""
+    failure = urllib.error.HTTPError(
+        "https://example.test", 503, "secret", Message(), None
+    )
+    with (
+        patch("urllib.request.urlopen", side_effect=failure) as provider,
+        patch("spine_learn.tutor.time.sleep") as sleep,
+    ):
+        with pytest.raises(TutorError) as caught:
+            tutor.answer({"question": "Explain"})
+    assert caught.value.status == 502
+    assert "secret" not in str(caught.value)
+    assert provider.call_count == 2
+    sleep.assert_called_once()
+    assert not tutor._lock.locked()
+
+
+@pytest.mark.parametrize("limit", ["minute", "day"])
+def test_retry_respects_remaining_quota(tutor: LessonTutor, limit: str) -> None:
+    """The retry cannot bypass either local provider-attempt allowance."""
+    if limit == "minute":
+        tutor._requests.extend([time.monotonic()] * 5)
+    else:
+        tutor._day = time.strftime("%Y-%m-%d", time.gmtime())
+        tutor._daily_count = 199
+    failure = urllib.error.HTTPError(
+        "https://example.test", 503, "secret", Message(), None
+    )
+    with (
+        patch("urllib.request.urlopen", side_effect=failure) as provider,
+        patch("spine_learn.tutor.time.sleep"),
+    ):
+        with pytest.raises(TutorError) as caught:
+            tutor.answer({"question": "Explain"})
+    assert caught.value.status == 429
+    assert provider.call_count == 1
+    assert not tutor._lock.locked()
+
+
+@pytest.mark.parametrize("elapsed", [10.0, 44.5])
+def test_retry_uses_remaining_timeout(tutor: LessonTutor, elapsed: float) -> None:
+    """A retry does not reset the timeout or start after the budget is spent."""
+    clock = [100.0]
+    calls = []
+
+    def provider(request, timeout):
+        """Advance a fake clock before reporting the first attempt's failure."""
+        calls.append(timeout)
+        if len(calls) == 1:
+            clock[0] += elapsed
+            raise urllib.error.HTTPError(
+                "https://example.test", 503, "secret", Message(), None
+            )
+        return io.BytesIO(b'{"candidates": [{"content": {"parts": [{"text": "OK"}]}}]}')
+
+    def sleep(delay):
+        """Advance the fake clock without making the test wait."""
+        clock[0] += delay
+
+    with (
+        patch("urllib.request.urlopen", side_effect=provider),
+        patch("spine_learn.tutor.time.monotonic", side_effect=lambda: clock[0]),
+        patch("spine_learn.tutor.time.sleep", side_effect=sleep),
+    ):
+        if elapsed == 10.0:
+            assert tutor.answer({"question": "Explain"})["answer"] == "OK"
+            assert calls == [45.0, 34.0]
+        else:
+            with pytest.raises(TutorError):
+                tutor.answer({"question": "Explain"})
+            assert calls == [45.0]
+
+
+def test_timeout_does_not_duplicate_generation(tutor: LessonTutor) -> None:
+    """A lost response may still be generating upstream, so do not resend it."""
+    with patch("urllib.request.urlopen", side_effect=TimeoutError) as provider:
+        with pytest.raises(TutorError) as caught:
+            tutor.answer({"question": "Explain"})
+    assert caught.value.status == 504
+    provider.assert_called_once()
