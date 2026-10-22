@@ -43,14 +43,24 @@ kubectl config current-context  # Must be neutrino-ml before proceeding.
 kubectl apply -f k8s/namespace.yaml
 ```
 
-Provision the Gemini key once from a permission-restricted file outside the
-repository. The filename below is a placeholder for that private file; do not
-put the key itself in command arguments, YAML, Git, or chat:
+Provision the Gemini key once with the interactive helper:
 
 ```bash
-kubectl -n spine-learn create secret generic spine-learn-gemini \
-  --from-file=api-key=/path/to/private/gemini-api-key
+bash k8s/create-gemini-secret.sh
 ```
+
+Paste the key at the prompt. Input is hidden, and the helper sends the key directly
+through standard input to Kubernetes: no key file is created, and the key is not
+included in shell history or process arguments. Do not pass the key as an argument.
+The helper displays the current context and creates `spine-learn-gemini` in the
+`spine-learn` namespace. It fails if the Secret already exists, preserving the
+existing credential; it is not a key-rotation command.
+
+The Deployment reads this Kubernetes Secret. No copy is needed in your home,
+checkout, or shared S3DF filesystem. Kubernetes access controls protect the
+Secret; cluster administrators and users allowed to read Secrets or control the
+application's pods can still access the credential. Keep the key out of Git,
+chat, and screenshots.
 
 The namespace is proposed as `spine-learn`; confirm it is allowed in the vcluster.
 The current deployment uses public sample URLs and needs no PVC or filesystem
