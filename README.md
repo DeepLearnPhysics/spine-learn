@@ -20,6 +20,13 @@ in one shared source so improvements can carry forward as the software evolves.
 The next priority is to expand the lesson collection and evaluate how well the
 combined written, spoken, and interactive material supports learners.
 
+The longer-term direction is **SciLoom**, a proposed reusable toolkit extracted
+from this work so other scientific-software communities can maintain their own
+executable, narrated, and optionally AI-assisted tutorials. SPINE Learn will remain
+the reference implementation and a maintained learning resource for SPINE users.
+The reusable toolkit is planned work; this repository currently implements the
+SPINE-specific learning experience.
+
 The lesson uses **SPINE 1.4.1**, installed from PyPI with
 `pip install "spine[viz]==1.4.1"`. It reads existing reconstruction output and
 requires no neural-network runtime or GPU.
@@ -388,3 +395,23 @@ The intended automation is **Argo CD provisioned by the S3DF platform team** in
 the existing vcluster. Application configuration and release-source integration
 are pending; deployments currently use the manual update procedure. The local
 `make tutor` preview remains available independently.
+
+## License
+
+Original code, tutorial text and examples, narration scripts, and documentation
+in this repository are available under the [MIT License](LICENSE), matching
+[SPINE's license](https://github.com/DeepLearnPhysics/spine/blob/main/LICENSE).
+Generated notebooks carry the same terms for the original material they contain.
+
+Third-party material retains its own licenses and notices:
+
+- SPINE branding retains its [upstream MIT license](site_assets/brand/LICENSE)
+  and [provenance](site_assets/brand/README.md).
+- Vendored browser libraries retain the notices for
+  [Marked](site_assets/tutor/vendor/marked-LICENSE.txt) and
+  [DOMPurify](site_assets/tutor/vendor/dompurify-LICENSE.txt).
+- Speech dependencies and model assets are documented in the
+  [TTS licensing notes](tts/README.md#licenses-and-asset-distribution).
+- The externally hosted sample dataset is documented in
+  [data provenance](data/README.md); this repository's license does not relicense
+  that dataset or other external dependencies.
