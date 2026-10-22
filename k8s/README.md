@@ -59,21 +59,21 @@ competing manual version.
 5. CI publishes the same manifests to
    `ghcr.io/deeplearnphysics/spine-learn-deploy:sha-COMMIT`. It promotes the
    deployment artifact's `main` tag only if that commit is still GitHub's main head.
-6. Once S3DF provides/configures Flux, its source controller polls that artifact
-   every two minutes and reconciles the new release. No cluster credential or
-   Gemini key is stored in GitHub Actions. No Git write token is needed by Flux.
+6. Until the planned S3DF-managed Argo CD integration is configured, download
+   `s3df-release` and apply it manually using the update instructions above.
+   No cluster credential or Gemini key is stored in GitHub Actions.
 
-The first publication requires GitHub Actions package-write permission. After it
-finishes, make **both GHCR packages public** in their package settings so S3DF can
-pull anonymously. Public source repositories do not guarantee public packages.
-Alternatively, configure S3DF-approved registry pull credentials in both the
-workload and Flux source; never use the Gemini Secret for registry authentication.
+The first publication requires GitHub Actions package-write permission. Make
+the application image package public so S3DF can pull anonymously, or configure
+S3DF-approved registry pull credentials. Public source repositories do not
+guarantee public packages. Never use the Gemini Secret for registry authentication.
+Access to the separate deployment-artifact package will also need configuration
+if it is selected as the Argo CD release source.
 
-This repository prepares Flux resources but does not install cluster controllers.
-Confirm with the S3DF platform team that the controllers support `source.toolkit.fluxcd.io/v1`
-`OCIRepository`, watch `spine-learn`, allow the specified reconciler service account,
-and can pull from GHCR. If S3DF manages Flux centrally, give them `flux/sync.yaml`
-to adapt rather than installing a second controller stack.
+CI currently uses the Flux CLI to publish the OCI deployment artifact. This is
+an artifact-packaging step, not a Flux installation or an active deployment
+controller. The existing `k8s/flux/` manifests are an unused alternative from the
+earlier deployment design; do not apply them for the planned Argo CD setup.
 
 ## GitHub CLI setup on S3DF
 
@@ -195,48 +195,36 @@ Open `/lesson`, check audio seeking and notebook download, and send one chat
 question. The status and readiness checks do not consume Gemini requests;
 **Check connection** and chat do. Keep the API key out of screenshots/logs.
 
-## Enable automatic reconciliation
+## Planned automation with S3DF-managed Argo CD
 
-After Flux support is confirmed and both registry packages are accessible:
+The intended deployment controller is **Argo CD**, provisioned and maintained by
+the S3DF platform team in the existing vcluster. The project maintainers will
+configure which applications and releases it manages. Manual deployments remain
+the supported procedure until that integration is ready.
 
-```bash
-kubectl apply -f k8s/flux/sync.yaml
-kubectl -n spine-learn get ocirepositories,kustomizations
-```
+Before enabling automatic deployment, agree with the platform team on:
 
-The reconciler is namespace-scoped and may manage only Deployments, Services,
-and HTTPRoutes. The namespace, Gemini Secret, and Flux bootstrap resources are
-not part of the continuously pruned release bundle. The application itself has
-no Kubernetes API token mounted.
+- The Argo CD instance, access, and application/project permissions.
+- The supported release source: the published OCI deployment bundle or a Git
+  location containing rendered manifests with a tested image digest. Do not
+  point Argo CD directly at `k8s/base`, which contains a placeholder image.
+- Application scope for SPINE Learn and, separately, spinal-tap, so the shared
+  infrastructure can support both without coupling their releases.
+- Sync approval, pruning, health checks, and the procedure for pausing updates
+  or selecting an earlier release.
 
-Once enabled, a successful main build updates the site and lesson context
-together. Editing the HTTPRoute or backend configuration uses the same release
-path. Failed builds and smoke tests do not promote the deployment artifact.
-Flux reports unhealthy deployments; it does **not** automatically roll back a
-release that passes CI but fails in S3DF.
+The Gemini Secret remains provisioned separately in Kubernetes. Release manifests
+must not include its value, and application pruning must not remove it. No Argo CD
+Application manifests are supplied yet; the source integration and permissions
+must be confirmed before documenting executable setup commands.
 
-## Rollback or pause automation
+### Rollback
 
-To hold deployment updates without stopping the app:
-
-```bash
-kubectl -n spine-learn patch kustomization spine-learn --type=merge \
-  -p '{"spec":{"suspend":true}}'
-```
-
-To choose a previous published release, set the OCI source to its full commit
-SHA tag and resume reconciliation:
-
-```bash
-kubectl -n spine-learn patch ocirepository spine-learn --type=merge \
-  -p '{"spec":{"ref":{"tag":"sha-PREVIOUS_FULL_COMMIT_SHA"}}}'
-kubectl -n spine-learn patch kustomization spine-learn --type=merge \
-  -p '{"spec":{"suspend":false}}'
-```
-
-To follow CI again, change that source tag back to `main`. Without Flux, apply
-the older run's `s3df-release` artifact. Do not rely on `rollout undo` while Flux
-continues reconciling a newer desired image.
+For the current manual deployment, download an earlier successful run's
+`s3df-release` into a fresh directory and follow **Update an existing deployment**.
+Once Argo CD manages the application, select the earlier release through its
+configured source and sync workflow. A manual `kubectl` change alone is not a
+lasting rollback if the controller still targets the newer release.
 
 ## Runtime scope
 
@@ -273,6 +261,4 @@ This test uses a temporary loopback port, passes no key, and removes its contain
 on completion. It verifies static pages, portable downloads, status, and an
 actual HTTP 206 audio range response under the read-only runtime settings.
 
-References: [Flux OCI sources](https://fluxcd.io/flux/components/source/ocirepositories/),
-[Flux artifact publishing](https://fluxcd.io/flux/cmd/flux_push_artifact/), and
-[SLAC's route example](https://github.com/slaclab/slac-k8s-examples/blob/main/basic/httproutes/httproute-authnz.yaml).
+Reference: [SLAC's route example](https://github.com/slaclab/slac-k8s-examples/blob/main/basic/httproutes/httproute-authnz.yaml).

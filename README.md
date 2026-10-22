@@ -371,8 +371,12 @@ preview after editing the stylesheet.
 
 ## S3DF hosting and automated releases
 
-The production serving layer, public HTTPRoute, first-rollout instructions, and
-optional Flux pull-based deployment are documented in [k8s/README.md](k8s/README.md).
-GitHub Actions publishes a tested application image and a digest-pinned deployment
-bundle; cluster access and the Gemini Secret remain on S3DF. The local `make tutor`
-preview remains available independently.
+The production serving layer, public HTTPRoute, and manual rollout/update
+instructions are documented in [k8s/README.md](k8s/README.md). GitHub Actions
+publishes a tested application image and a digest-pinned deployment bundle;
+cluster access and the Gemini Secret remain on S3DF.
+
+The intended automation is **Argo CD provisioned by the S3DF platform team** in
+the existing vcluster. Application configuration and release-source integration
+are pending; deployments currently use the manual update procedure. The local
+`make tutor` preview remains available independently.
