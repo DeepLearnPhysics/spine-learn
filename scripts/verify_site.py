@@ -86,6 +86,16 @@ def verify(root: Path, require_audio: bool = False, base: str = "") -> None:
     base
         Hosting prefix, such as ``/spine-learn`` for a GitHub Pages project site.
     """
+    # An ICO filename must contain an ICO, not a PNG served with the wrong type.
+    favicon = (root / "favicon.ico").read_bytes()
+    assert favicon[:4] == b"\x00\x00\x01\x00", "favicon.ico must be a real ICO"
+    icon_count = int.from_bytes(favicon[4:6], "little")
+    sizes = {
+        (favicon[6 + 16 * index] or 256, favicon[7 + 16 * index] or 256)
+        for index in range(icon_count)
+    }
+    assert {(16, 16), (32, 32)} <= sizes, "Missing common favicon sizes"
+
     lesson = Tags((root / "lesson/index.html").read_text(encoding="utf-8"))
     anchors = {attributes["id"] for _, attributes in lesson.tags if "id" in attributes}
     expected_sections = {

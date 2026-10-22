@@ -61,6 +61,7 @@ def main() -> None:
                 time.sleep(1)
         assert fetch("/")[0] == 200
         assert fetch("/lesson")[0] == 200
+        assert fetch("/favicon.ico")[1][:4] == b"\x00\x00\x01\x00"
         assert json.loads(fetch("/api/tutor/status")[1])["configured"] is False
         player = fetch("/players/orientation.html")[1].decode()
         audio = re.search(r'src="\.\./(audio/[^"]+)"', player)
