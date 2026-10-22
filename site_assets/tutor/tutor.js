@@ -20,7 +20,9 @@ function updateControls() {
     clear.disabled = busy;
     reconnect.disabled = busy;
     suggestions.forEach(button => { button.disabled = !ready || busy; });
-    send.textContent = busy ? "Thinking…" : "Ask";
+    send.querySelector("span").textContent = busy ? "…" : "↑";
+    send.setAttribute("aria-label", busy ? "Sending question" : "Send question");
+    send.title = busy ? "Sending question" : "Send question (Enter)";
     messages.setAttribute("aria-busy", String(busy));
 }
 
@@ -129,6 +131,16 @@ function recentHistory() {
     }
     return recent;
 }
+
+// Enter submits; Shift+Enter retains the textarea's native newline behavior.
+// Composition events must finish before Enter can send an IME user's text.
+question.addEventListener("keydown", event => {
+    if (event.key !== "Enter" || event.isComposing || event.keyCode === 229) return;
+    if (event.shiftKey || event.ctrlKey || event.metaKey || event.altKey) return;
+    event.preventDefault();
+    if (event.repeat || !ready || busy || !question.value.trim()) return;
+    document.querySelector("#chat").requestSubmit();
+});
 
 document.querySelector("#chat").addEventListener("submit", async event => {
     event.preventDefault();

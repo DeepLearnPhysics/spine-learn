@@ -81,3 +81,28 @@ textarea { min-height: 64px; height: 64px; max-height: 120px; resize: none; font
 .tutor-unavailable #chat,
 .tutor-unavailable .settings { display: none; }
 #availability { font-size: 14px; }
+
+/* Keep conversation management above the messages and sending beside the hint. */
+.conversation-header { display: flex; align-items: center; gap: 10px; flex-shrink: 0; padding-top: 10px; }
+.conversation-header .intro { flex: 1; margin: 0; }
+#clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+    border-color: transparent;
+    background: transparent;
+    color: var(--muted);
+}
+#clear:hover:not(:disabled) {
+    border-color: transparent;
+    background: color-mix(in srgb, var(--text) 8%, var(--surface));
+    color: var(--text);
+}
+.actions { align-items: center; justify-content: space-between; flex-wrap: nowrap; }
+#keyboard-hint { font-size: 11px; color: var(--muted); }
+#send { width: 38px; height: 38px; padding: 0; flex-shrink: 0; font-size: 24px; line-height: 1; }
+.tutor-unavailable .conversation-header { display: none; }

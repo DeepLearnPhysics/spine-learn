@@ -14,7 +14,15 @@
   <details id="companion">
     <summary aria-label="Open lesson help"><strong>Ask SPINE</strong><span class="toggle-icon" aria-hidden="true">+</span></summary>
     <div class="panel">
-      <p class="intro">Questions, explanations, and hints for this lesson.</p>
+      <div class="conversation-header">
+        <p class="intro">Questions, explanations, and hints for this lesson.</p>
+        <button id="clear" type="button" aria-label="New conversation" title="New conversation">
+          <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7"/>
+            <path d="m16 3 5 5M10 14l-1 4 4-1L22 8a2.1 2.1 0 0 0-5-5Z"/>
+          </svg>
+        </button>
+      </div>
       <p id="availability" role="status" hidden></p>
       <div class="suggestions" aria-label="Suggested questions">
         <button type="button" data-question="What is the difference between an entry and a reconstructed interaction in this sample?">Explain the sample</button>
@@ -24,10 +32,10 @@
       <div id="messages" role="log" aria-label="Conversation" aria-live="polite"></div>
       <form id="chat">
         <label for="question">Your question</label>
-        <textarea id="question" rows="3" maxlength="4000" placeholder="What would you like to understand?" required disabled></textarea>
+        <textarea id="question" aria-describedby="keyboard-hint" rows="3" maxlength="4000" placeholder="What would you like to understand?" required disabled></textarea>
         <div class="actions">
-          <button id="send" type="submit" disabled>Ask</button>
-          <button id="clear" type="button">New conversation</button>
+          <small id="keyboard-hint">Enter to send · Shift+Enter for a new line</small>
+          <button id="send" type="submit" aria-label="Send question" title="Send question (Enter)" disabled><span aria-hidden="true">↑</span></button>
         </div>
         <p id="feedback" role="status"></p>
       </form>
@@ -39,7 +47,7 @@
         <p><a href="https://aistudio.google.com/api-keys" target="_blank" rel="noopener noreferrer">Create a key in Google AI Studio ↗</a>. Do not paste your key into the conversation.</p>
       </details>
       <button id="reconnect" type="button">Check connection</button>
-      <p class="footnote">Questions and recent chat history are sent to Google Gemini when you press Ask. Check connection sends a test request. Answers may be wrong; check the lesson. The tutor cannot run your notebook. Chat stays in this tab and is cleared on reload.</p>
+      <p class="footnote">Questions and recent chat history are sent to Google Gemini when you send a question. Check connection sends a test request. Answers may be wrong; check the lesson. The tutor cannot run your notebook. Chat stays in this tab and is cleared on reload.</p>
       </details>
     </div>
   </details>

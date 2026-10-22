@@ -96,13 +96,97 @@ if (frame && frame.parentElement) {
 // Guided narration observes playback, but the learner decides when to continue.
 const guidance = document.querySelector(".narration-guidance");
 const parentDocument = frame ? window.parent.document : null;
+// Keep reporting beside the notebook action, including while reading lower sections.
+function prepareFeedback(downloadButton) {
+    const toolbar = downloadButton.closest(".myst-fm-block-header");
+    if (!toolbar || toolbar.querySelector(".lesson-feedback")) return;
+
+    const menu = parentDocument.createElement("details");
+    menu.className = "lesson-feedback";
+    const toggle = parentDocument.createElement("summary");
+    toggle.textContent = "Feedback";
+    menu.append(toggle);
+    const panel = parentDocument.createElement("div");
+    panel.className = "lesson-feedback-panel";
+    const lesson = parentDocument.querySelector("h1")?.textContent.trim()
+        || parentDocument.title;
+    for (const [label, template, field] of [
+        ["Report a problem", "problem.yml", "lesson"],
+        ["Suggest an improvement", "suggestion.yml", "related"],
+    ]) {
+        const link = parentDocument.createElement("a");
+        const url = new URL("https://github.com/DeepLearnPhysics/spine-learn/issues/new");
+        url.searchParams.set("template", template);
+        url.searchParams.set(field, lesson);
+        link.href = url.href;
+        link.textContent = label;
+        link.target = "_blank";
+        link.rel = "noopener noreferrer";
+        link.addEventListener("click", () => { menu.open = false; });
+        panel.append(link);
+    }
+    const note = parentDocument.createElement("small");
+    note.textContent = "Opens GitHub · account required";
+    panel.append(note);
+    menu.append(panel);
+    toolbar.append(menu);
+    toolbar.classList.add("lesson-actions");
+
+    // A marker preserves the original position when the action row is pinned.
+    const marker = parentDocument.createElement("div");
+    marker.className = "lesson-actions-marker";
+    toolbar.before(marker);
+    const updatePosition = () => {
+        if (!toolbar.isConnected) return;
+        const nav = parentDocument.querySelector(".myst-top-nav-bar");
+        const top = Math.max(0, nav?.getBoundingClientRect().bottom || 0) + 8;
+        const bounds = marker.getBoundingClientRect();
+        const pinned = bounds.top < top;
+        if (pinned && !toolbar.classList.contains("is-pinned")) {
+            marker.style.height = `${toolbar.getBoundingClientRect().height + 20}px`;
+        } else if (!pinned) {
+            marker.style.height = "0px";
+        }
+        toolbar.classList.toggle("is-pinned", pinned);
+        if (pinned) {
+            toolbar.style.top = `${top}px`;
+            toolbar.style.right = `${parentDocument.documentElement.clientWidth - bounds.right}px`;
+            toolbar.style.width = "max-content";
+            toolbar.style.maxWidth = `${bounds.width}px`;
+        } else {
+            for (const property of ["top", "right", "width", "max-width"]) toolbar.style.removeProperty(property);
+        }
+    };
+    const dismiss = event => {
+        if (event.key === "Escape" && menu.open) {
+            menu.open = false;
+            toggle.focus();
+        } else if (event.type === "click" && !menu.contains(event.target)) {
+            menu.open = false;
+        }
+    };
+    parentDocument.addEventListener("click", dismiss);
+    parentDocument.addEventListener("keydown", dismiss);
+    window.parent.addEventListener("scroll", updatePosition, {passive: true});
+    window.parent.addEventListener("resize", updatePosition);
+    updatePosition();
+    window.addEventListener("pagehide", () => {
+        parentDocument.removeEventListener("click", dismiss);
+        parentDocument.removeEventListener("keydown", dismiss);
+        window.parent.removeEventListener("scroll", updatePosition);
+        window.parent.removeEventListener("resize", updatePosition);
+    });
+}
+
 // MyST uses a menu for downloads. This lesson has one portable notebook, so
 // adapt the existing control to a direct download without adding another button.
 if (parentDocument && document.body.dataset.notebook) {
     const notebookUrl = new URL(document.body.dataset.notebook, window.location.href).href;
     const prepareDownload = () => {
         const button = parentDocument.querySelector(".myst-fm-downloads-button");
-        if (!button || button.dataset.notebookUrl === notebookUrl) return;
+        if (!button) return;
+        prepareFeedback(button);
+        if (button.dataset.notebookUrl === notebookUrl) return;
         button.dataset.notebookUrl = notebookUrl;
         button.setAttribute("aria-label", "Download notebook (.ipynb)");
         button.setAttribute("title", "Download notebook (.ipynb)");

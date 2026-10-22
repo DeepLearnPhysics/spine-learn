@@ -333,3 +333,58 @@ article .myst-code {
     line-height: 1;
 }
 .js-plotly-plot .modebar-btn svg { display: block; margin: 0; width: 16px; height: 16px; }
+
+/* One persistent row for lesson actions; feedback remains separate from chat. */
+.lesson-actions {
+    min-height: 36px;
+    height: auto;
+    gap: 12px;
+    background: var(--myst-bg, white);
+    border-radius: 8px;
+}
+.lesson-actions.is-pinned {
+    position: fixed;
+    z-index: 35;
+    margin: 0;
+    padding: 6px 8px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 8px #0002;
+}
+.lesson-actions-marker { width: 100%; }
+.lesson-feedback { position: relative; flex-shrink: 0; }
+.lesson-feedback summary {
+    cursor: pointer;
+    list-style: none;
+    padding: 6px 8px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+}
+.lesson-feedback summary::-webkit-details-marker { display: none; }
+.lesson-feedback summary::after { content: " ▾"; }
+.lesson-feedback summary:focus-visible,
+.lesson-feedback-panel a:focus-visible { outline: 2px solid #EB7913; outline-offset: 2px; }
+.lesson-feedback-panel {
+    position: absolute;
+    right: 0;
+    top: calc(100% + 6px);
+    z-index: 40;
+    width: 245px;
+    max-width: calc(100vw - 32px);
+    padding: 8px;
+    border: 1px solid #8886;
+    border-radius: 8px;
+    background: var(--myst-bg, white);
+    box-shadow: 0 4px 16px #0003;
+}
+.lesson-feedback-panel a {
+    display: block;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 14px;
+    text-decoration: none;
+}
+.lesson-feedback-panel a:hover { background: #EB79131a; }
+.lesson-feedback-panel small { display: block; padding: 4px 8px; font-size: 11px; }
+.dark .lesson-actions, .dark .lesson-feedback-panel { background: #1b1918; }

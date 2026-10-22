@@ -12,6 +12,10 @@ The immediate scope is one complete lesson, not a course platform.
 
 ## Questions, problems, and suggestions
 
+On tutorial pages, the **Feedback** menu beside the notebook download stays
+available while scrolling. Choose a problem report or suggestion; the current
+lesson is prefilled in the GitHub form, which opens in a new tab.
+
 Use [SPINE Learn issues](https://github.com/DeepLearnPhysics/spine-learn/issues)
 for code that does not run, unclear or incorrect explanations, website problems,
 and requests for new tutorials or SPINE functionality to cover.
@@ -93,7 +97,9 @@ is required. Do not place keys in lesson sources, browser code, or GitHub Pages.
 
 Open **Ask SPINE** in the lower-right corner of the lesson. The panel stays
 accessible while scrolling; minimize it or press Escape to return to reading
-without losing the conversation. Answers render Markdown, including code blocks,
+without losing the conversation. Press **Enter** to send or **Shift+Enter** for a new line. The arrow button also
+sends your question; **New conversation** is at the top of the panel.
+Answers render Markdown, including code blocks,
 lists, and tables. Try a suggested question, ask a follow-up, and use **New
 conversation** to clear it. Chat history stays in memory in the current browser
 tab and disappears on reload. Each request sends the lesson source, question,

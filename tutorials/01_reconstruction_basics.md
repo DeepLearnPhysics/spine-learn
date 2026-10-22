@@ -19,7 +19,6 @@ Explore a reconstructed simulation event, inspect its particles, and build a
 small interaction selection. You will learn to distinguish points, particles,
 and interactions, and to interpret SPINE's particle labels and primary flags.
 
-[Report a problem](https://github.com/DeepLearnPhysics/spine-learn/issues/new?template=problem.yml) or [suggest an improvement](https://github.com/DeepLearnPhysics/spine-learn/issues/new?template=suggestion.yml) · GitHub account required.
 
 ## Before you begin
 
