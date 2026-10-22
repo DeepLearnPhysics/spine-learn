@@ -64,3 +64,16 @@ def test_every_narration_has_a_playback_focus() -> None:
         rendered = player_html(chunk, Path("audio.wav"))
         focus = chunk.get("focus", chunk["section"])
         assert f'data-focus="{focus}"' in rendered
+
+
+def test_colab_export_is_current() -> None:
+    """Keep the GitHub-hosted export synchronized with the maintained lesson."""
+    from spine_learn.build import COLAB_PATH, colab_notebook
+
+    expected = colab_notebook()
+    assert nbformat.read(COLAB_PATH, as_version=4) == expected, "Run make colab"
+    code = [cell for cell in expected.cells if cell.cell_type == "code"]
+    assert len(code) == 7
+    assert '%pip install -q "spine[viz]==1.4.1"' in code[0].source
+    assert any('renderer="colab"' in cell.source for cell in code)
+    assert all(not cell.outputs and cell.execution_count is None for cell in code)

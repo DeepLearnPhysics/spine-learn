@@ -388,3 +388,22 @@ article .myst-code {
 .lesson-feedback-panel a:hover { background: #EB79131a; }
 .lesson-feedback-panel small { display: block; padding: 4px 8px; font-size: 11px; }
 .dark .lesson-actions, .dark .lesson-feedback-panel { background: #1b1918; }
+
+/* Match the existing feedback control and keep all actions usable on phones. */
+.lesson-colab {
+    display: inline-flex;
+    flex-shrink: 0;
+    padding: 6px 8px;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
+    text-decoration: none;
+}
+.lesson-colab:hover { background: #EB79131a; }
+.lesson-colab:focus-visible { outline: 2px solid #EB7913; outline-offset: 2px; }
+.lesson-actions { flex-wrap: wrap; }
+@media (max-width: 600px) {
+    .lesson-actions { gap: 6px; }
+    body:has(#orientation) .myst-fm-downloads-button::after { content: "Notebook"; }
+}

@@ -22,6 +22,10 @@ and interactions, and to interpret SPINE's particle labels and primary flags.
 
 ## Before you begin
 
+Use **Open in Colab** at the top of this page to run and edit the lesson in your
+browser. Sign in with a Google account, then run the setup cell followed by the
+lesson cells. No local installation or GPU is needed.
+
 To run the notebook in your usual Jupyter or VS Code environment, install SPINE
 with its visualization tools:
 

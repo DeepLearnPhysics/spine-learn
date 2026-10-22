@@ -101,6 +101,15 @@ function prepareFeedback(downloadButton) {
     const toolbar = downloadButton.closest(".myst-fm-block-header");
     if (!toolbar || toolbar.querySelector(".lesson-feedback")) return;
 
+    const colab = parentDocument.createElement("a");
+    colab.className = "lesson-colab";
+    colab.href = document.body.dataset.colab;
+    colab.textContent = "Open in Colab";
+    colab.title = "Run and edit this lesson in Google Colab (Google account required)";
+    colab.target = "_blank";
+    colab.rel = "noopener noreferrer";
+    toolbar.append(colab);
+
     const menu = parentDocument.createElement("details");
     menu.className = "lesson-feedback";
     const toggle = parentDocument.createElement("summary");

@@ -186,8 +186,16 @@ narration/*.yaml + pronunciations + synthesis configuration
 MyST Markdown is authoritative. `make notebook` translates section anchors into
 standard HTML anchors that also work in Jupyter Markdown. The executed notebook
 is staged for MyST's `book-theme` with optional players, transcripts, and Continue
-links. Generated copies live only in `_build/`; nobody edits or synchronizes them.
-The website has no live kernel. Download the notebook to run or change the code.
+links. Website and download copies live in `_build/`; nobody edits them by hand.
+The website has no live kernel. Use **Open in Colab** to run and edit the lesson
+in a Google-hosted notebook, or download it for local use. Colab requires a Google
+account; its temporary CPU runtime is sufficient for this lesson.
+
+`make colab` regenerates `notebooks/01_points_particles_interactions.ipynb` from
+the canonical Markdown with a dependency-installation cell and Colab's Plotly
+renderer. Commit this generated export when the lesson changes; tests reject a
+stale export. It contains no outputs and is not edited by hand. The button opens
+the export on `main`, so changes become available after merging/pushing to GitHub.
 
 The choice is the current MyST CLI rather than a new Sphinx/Jupyter Book 1
 configuration. MyST supplies navigation, notebook rendering, static export, and
@@ -335,7 +343,7 @@ fork, select **Settings → Pages → Build and deployment → GitHub Actions**.
 paths, including iframe players. Publication target:
 [SPINE Learn](https://www.deeplearnphysics.org/spine-learn/).
 
-Generated notebooks, executed outputs, speech files, and model caches stay out of Git;
+Except for the generated Colab export, notebooks, executed outputs, speech files, and model caches stay out of Git;
 GitHub Actions rebuilds the publication from the authored sources.
 
 ## Current scope and development priorities

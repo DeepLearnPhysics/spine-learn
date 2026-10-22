@@ -25,6 +25,54 @@ from .narration import ROOT, SOURCE, current_audio, load_inputs
 
 BUILD = ROOT / "_build"
 NOTEBOOK_PATH = BUILD / "notebooks/01_points_particles_interactions.ipynb"
+COLAB_PATH = ROOT / "notebooks/01_points_particles_interactions.ipynb"
+COLAB_URL = (
+    "https://colab.research.google.com/github/DeepLearnPhysics/spine-learn/"
+    "blob/main/notebooks/01_points_particles_interactions.ipynb"
+)
+
+
+def colab_notebook() -> NotebookNode:
+    """Generate the published Colab export from the authoritative lesson.
+
+    Keep outputs out of Git and use deterministic cell IDs so regeneration
+    produces a reviewable diff. The ordinary download remains unchanged.
+    """
+    notebook = jupytext.read(SOURCE)
+    notebook.metadata = {"kernelspec": notebook.metadata.kernelspec}
+    introduction = nbformat.v4.new_markdown_cell(
+        "## Run this lesson in Colab\n\n"
+        "Sign in to Google, connect to a CPU runtime, then run the cells in order. "
+        "Run the setup cell below first; it installs the lesson dependencies. "
+        "You can edit every example. Save a copy in Drive to keep your changes.\n\n"
+        "Return to [SPINE Learn](https://spine-learn.slac.stanford.edu/lesson) "
+        "for narration and Ask SPINE. Colab sessions are temporary; after a "
+        "runtime reset, rerun setup and the lesson cells."
+    )
+    setup = nbformat.v4.new_code_cell(
+        "# Install the version used to validate this lesson.\n"
+        '%pip install -q "spine[viz]==1.4.1"'
+    )
+    notebook.cells[1:1] = [introduction, setup]
+    for index, cell in enumerate(notebook.cells):
+        cell.id = f"lesson-{index:03d}"
+        cell.metadata = {}
+        if cell.cell_type == "code":
+            cell.outputs = []
+            cell.execution_count = None
+            # Colab renders Plotly through its own HTML output integration.
+            cell.source = cell.source.replace(
+                'renderer="plotly_mimetype"', 'renderer="colab"'
+            )
+        else:
+            cell.source = re.sub(
+                r"^\(([a-z0-9-]+)\)=$",
+                r'<a id="\1"></a>',
+                cell.source,
+                flags=re.MULTILINE,
+            )
+    nbformat.validate(notebook)
+    return notebook
 
 
 def export_notebook(
@@ -170,7 +218,8 @@ def player_html(chunk: NarrationChunk, audio: Path | None) -> str:
   <script src="../narration.js" defer></script>
 </head>
 <body class="narration-player" data-focus="{focus}"
-      data-notebook="../downloads/{NOTEBOOK_PATH.name}">
+      data-notebook="../downloads/{NOTEBOOK_PATH.name}"
+      data-colab="{COLAB_URL}">
   <div class="{guidance_class}" {guidance_attributes}>
     {control}
     <p role="status" class="guidance-status visually-hidden"></p>
@@ -366,11 +415,16 @@ def stage_site(notebook: NotebookNode, require_audio: bool = False) -> Path:
 def main() -> None:
     """Run notebook export or the complete static-site build from the CLI."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["notebook", "site"])
+    parser.add_argument("command", choices=["notebook", "site", "colab"])
     parser.add_argument("--require-audio", action="store_true")
     arguments = parser.parse_args()
 
     try:
+        if arguments.command == "colab":
+            COLAB_PATH.parent.mkdir(parents=True, exist_ok=True)
+            nbformat.write(colab_notebook(), COLAB_PATH)
+            print(f"Colab notebook: {COLAB_PATH}")
+            return
         notebook = export_notebook()
         if arguments.command == "site":
             site = stage_site(notebook, require_audio=arguments.require_audio)

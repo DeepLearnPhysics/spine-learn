@@ -51,3 +51,7 @@ tutor:
 .PHONY: tutor-key
 tutor-key:
 	$(PYTHON) scripts/configure_tutor.py
+
+.PHONY: colab
+colab:
+	$(PYTHON) -m spine_learn.build colab
