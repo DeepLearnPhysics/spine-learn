@@ -72,8 +72,8 @@ if it is selected as the Argo CD release source.
 
 CI currently uses the Flux CLI to publish the OCI deployment artifact. This is
 an artifact-packaging step, not a Flux installation or an active deployment
-controller. The existing `k8s/flux/` manifests are an unused alternative from the
-earlier deployment design; do not apply them for the planned Argo CD setup.
+controller. The publishing approach will be finalized once S3DF confirms the
+release source for Argo CD.
 
 ## GitHub CLI setup on S3DF
 
