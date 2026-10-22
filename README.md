@@ -1,8 +1,8 @@
 # SPINE Learn
 
 An executable, narrated lesson that can evolve with the software it teaches.
-This first prototype targets **SPINE 1.4.0**, installed directly from PyPI with
-`pip install spine==1.4.0`. Most basic SPINE work needs only a normal pip
+This first prototype targets **SPINE 1.4.1**, installed directly from PyPI with
+`pip install "spine[viz]==1.4.1"`. Most basic SPINE work needs only a normal pip
 installation; the lesson does not need a neural-network runtime or GPU.
 
 Workshops and recorded lectures are valuable, but copying notebooks into a new
@@ -107,7 +107,7 @@ cells, assertions, a figure, predictions, and exercises.
 
 The notebook reads a 1.6 MB generic-simulation sample from public S3DF storage,
 checks its SHA-256, and restores stored particle/interaction associations with
-SPINE 1.4.0. Entry 0 provides 2,228 points, nine particles, and three interactions.
+SPINE 1.4.1. Entry 0 provides 2,228 points, nine particles, and three interactions.
 The sample was written by SPINE 0.9.5; this is recorded provenance, not the version
 learners must install. No model inference is run in the lesson. Reconstructed
 labels are distinguished from simulation truth. See `data/README.md` for the

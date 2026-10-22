@@ -68,8 +68,10 @@ def _verify_notebook(path: Path) -> None:
     # Flatten outputs once so the error and figure checks remain easy to read.
     outputs = [output for cell in code_cells for output in cell["outputs"]]
     assert not any(output["output_type"] == "error" for output in outputs)
-    assert any("image/png" in output.get("data", {}) for output in outputs)
-    assert "SPINE 1.4.0" in json.dumps(notebook)
+    assert any(
+        "application/vnd.plotly.v1+json" in output.get("data", {}) for output in outputs
+    )
+    assert "SPINE 1.4.1" in json.dumps(notebook)
 
 
 def verify(root: Path, require_audio: bool = False, base: str = "") -> None:

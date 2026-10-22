@@ -318,3 +318,18 @@ article .myst-code {
     border-radius: 8px;
     overflow: hidden;
 }
+
+/* Keep article typography from turning Plotly's toolbar into stacked text links. */
+.js-plotly-plot .modebar { display: flex; flex-wrap: wrap; justify-content: flex-end; }
+.js-plotly-plot .modebar-group { display: flex; float: none; align-items: center; }
+.js-plotly-plot .modebar-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    padding: 5px;
+    margin: 0;
+    line-height: 1;
+}
+.js-plotly-plot .modebar-btn svg { display: block; margin: 0; width: 16px; height: 16px; }

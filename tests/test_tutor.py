@@ -18,7 +18,7 @@ def tutor(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> LessonTutor:
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.delenv("GEMINI_MODEL", raising=False)
     lesson = tmp_path / "lesson.md"
-    lesson.write_text("SPINE 1.4.0. The fixture is synthetic.")
+    lesson.write_text("SPINE 1.4.1. The fixture is synthetic.")
     key = tmp_path / "key"
     key.write_text("test-only-secret")
     return LessonTutor(lesson, key)

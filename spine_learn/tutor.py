@@ -21,7 +21,7 @@ KEY_FILE = ROOT / ".gemini-api-key"
 MAX_QUESTION = 4000
 MAX_HISTORY = 12
 MAX_HISTORY_CHARS = 24000
-INSTRUCTIONS = """You are the SPINE Learn lesson companion for SPINE 1.4.0.
+INSTRUCTIONS = """You are the SPINE Learn lesson companion for SPINE 1.4.1.
 Explain the supplied lesson, answer follow-up questions, and offer progressive
 hints before full exercise solutions unless the learner explicitly asks for one.
 Use the lesson as evidence. Cite its relevant section by number and title.

@@ -28,7 +28,7 @@ with its visualization tools:
 pip install "spine[viz]"
 ```
 
-The examples are tested with **SPINE 1.4.0**. Use the notebook download at the top
+The examples are tested with **SPINE 1.4.1**. Use the notebook download at the top
 of this page to run them yourself. The website shows the executed results.
 For environment setup or the full reconstruction runtime in Docker, see the
 [SPINE installation guide](https://spine.readthedocs.io/en/latest/installation.html).
@@ -44,12 +44,12 @@ import hashlib
 from pathlib import Path
 from urllib.request import urlretrieve
 
-import matplotlib.pyplot as plt
 import numpy as np
 import spine
 from spine.constants import MUON_PID, PID_LABELS
 from spine.construct import BuildManager
 from spine.io.read import HDF5Reader
+from spine.vis import Drawer
 
 sample_url = (
     "https://s3df.slac.stanford.edu/data/neutrino/spine/"
@@ -166,26 +166,23 @@ of the particle's generator history.
 
 The coordinates in this sample are in centimeters. We will plot positions;
 interpreting deposited energy requires additional knowledge of the simulation
-and reconstruction configuration.
+and reconstruction configuration. SPINE's `Drawer` builds an interactive Plotly
+figure directly from the event objects. Drag to rotate, scroll to zoom, and hover
+over a particle to inspect its properties. Click a legend entry to hide it;
+double-click one to isolate that particle. This view shows points assigned to
+reconstructed particles, which need not include every point in the event.
 
 ```{code-cell} python
-figure = plt.figure(figsize=(7, 5), layout="constrained")
-axes = figure.add_subplot(projection="3d")
-
-# Color by particle membership, rather than connecting unordered points by lines.
-for candidate in particles:
-    axes.scatter(
-        *candidate.points.T,
-        s=5,
-        alpha=0.7,
-        label=f"{candidate.id}: {PID_LABELS[candidate.pid]}",
-    )
-
-axes.set(xlabel="x [cm]", ylabel="y [cm]", zlabel="z [cm]")
-axes.set_title("Entry 0: reconstructed particle candidates")
-axes.set_box_aspect(np.ptp(points, axis=0))
-axes.legend(fontsize=8, loc="upper left", bbox_to_anchor=(1.05, 1))
-plt.show()
+# Draw the reconstructed objects already restored by BuildManager.
+# Each particle gets its own trace, so the legend can hide or isolate it.
+drawer = Drawer(event, draw_mode="reco", height=550)
+figure = drawer.get(
+    "particles",
+    attr=["id", "pid", "size", "is_primary", "interaction_id"],
+    split_traces=True,
+    title="Entry 0: reconstructed particle candidates",
+)
+figure.show(renderer="plotly_mimetype")
 ```
 
 **Try:** choose a different particle ID in the previous cell. Compare its size
