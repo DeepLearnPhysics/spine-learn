@@ -22,6 +22,7 @@ from nbformat import NotebookNode
 
 from .models import NarrationChunk, NarrationDocument
 from .narration import ROOT, SOURCE, current_audio, load_inputs
+from .static_figure import STATIC_FIGURE, STATIC_URL, render_static_event
 
 BUILD = ROOT / "_build"
 NOTEBOOK_PATH = BUILD / "notebooks/01_points_particles_interactions.ipynb"
@@ -265,6 +266,10 @@ def _add_guided_sections(
         if cell.cell_type != "markdown":
             continue
 
+        cell.source = cell.source.replace(
+            STATIC_URL, f"{base_url}/downloads/{STATIC_FIGURE}"
+        )
+
         # Restore MyST labels so the website renderer can resolve section links.
         cell.source = re.sub(r'<a id="([a-z0-9-]+)"></a>', r"(\1)=", cell.source)
         for section, chunk in chunks.items():
@@ -379,6 +384,7 @@ def stage_site(notebook: NotebookNode, require_audio: bool = False) -> Path:
             shutil.rmtree(path)
         path.mkdir()
     shutil.copy(NOTEBOOK_PATH, site / "downloads")
+    render_static_event(notebook, site / "downloads" / STATIC_FIGURE)
     # The collection currently has one lesson; package the same portable export.
     with zipfile.ZipFile(
         site / "downloads/spine-learn-notebooks.zip", "w", zipfile.ZIP_DEFLATED

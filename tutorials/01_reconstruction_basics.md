@@ -20,6 +20,10 @@ small interaction selection. You will learn to distinguish points, particles,
 and interactions, and to interpret SPINE's particle labels and primary flags.
 
 
+**Try the guided experience:** use **▶ Listen** for explanations and exercises,
+and **Ask SPINE** whenever you have a question. Choose **Open in Colab** to edit
+and run the examples in your browser. Narration and chat are optional.
+
 ## Before you begin
 
 Use **Open in Colab** at the top of this page to run and edit the lesson in your
@@ -190,6 +194,11 @@ figure = drawer.get(
 figure.show(renderer="plotly_mimetype")
 ```
 
+[View static image](https://spine-learn.slac.stanford.edu/downloads/entry-0-particles.png)
+if the interactive display is unavailable. It shows the same particle candidates
+and colors in three coordinate projections, with distances in centimeters.
+Rotation, hover information, and particle toggling require the interactive view.
+
 **Try:** choose a different particle ID in the previous cell. Compare its size
 and label with particle 4. Does the plotted geometry alone establish its species?
 The labels are reconstruction outputs, even when a shape looks familiar.
@@ -223,6 +232,12 @@ primary. Its `1mu1pi1p` topology describes valid primary candidates classified
 as one muon, one pion, and one proton. It does not describe every constituent
 and is not an interaction-mode classification.
 
+Here, **valid** (`is_valid`) means a particle counts toward the interaction
+topology. It is not a guarantee that the reconstruction or particle label is
+correct. The sample stores this flag; its production configuration applies
+kinetic-energy thresholds of 50 MeV for protons and 25 MeV for other particle
+types. This notebook reads those stored decisions rather than recalculating them.
+
 **Try:** identify the three non-primary particles in the output. Predict how
 counting every constituent instead of only primaries would change your summary.
 
@@ -230,7 +245,9 @@ counting every constituent instead of only primaries would change your summary.
 ## 4. Turn inspection into a small selection
 
 Now select interactions containing exactly one **valid primary muon candidate**.
-State each condition explicitly so the selection says what you intend.
+The three conditions are separate: `is_valid` applies the topology eligibility
+explained above, `is_primary` selects primary candidates, and `pid == MUON_PID`
+selects candidates classified as muons.
 
 ```{code-cell} python
 def primary_muon_count(candidate):

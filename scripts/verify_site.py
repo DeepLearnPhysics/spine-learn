@@ -86,6 +86,10 @@ def verify(root: Path, require_audio: bool = False, base: str = "") -> None:
     base
         Hosting prefix, such as ``/spine-learn`` for a GitHub Pages project site.
     """
+    # The fallback is a real image that remains usable without JavaScript/WebGL.
+    fallback = root / "downloads/entry-0-particles.png"
+    assert fallback.read_bytes().startswith(b"\x89PNG\r\n\x1a\n")
+
     # An ICO filename must contain an ICO, not a PNG served with the wrong type.
     favicon = (root / "favicon.ico").read_bytes()
     assert favicon[:4] == b"\x00\x00\x01\x00", "favicon.ico must be a real ICO"

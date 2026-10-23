@@ -48,6 +48,7 @@ def test_guided_steps_and_lesson_download(tmp_path: Path) -> None:
     assert rendered.index("/players/orientation-explanation.html") > rendered.index(
         "(orientation-activity)="
     )
+    assert "/spine-learn/downloads/entry-0-particles.png" in rendered
     assert "/players/" not in original
     assert "downloads" not in notebook.metadata
     assert website.metadata["downloads"][0]["filename"] == NOTEBOOK_PATH.name
