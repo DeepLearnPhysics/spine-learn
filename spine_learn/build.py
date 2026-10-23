@@ -346,7 +346,7 @@ def _write_site_configuration(site: Path) -> None:
             "title": "SPINE Learn",
             "template": "book-theme",
             "options": {
-                "logo": "brand/spine-logo-light.png",
+                "logo": "brand/spine-logo-dark.png",
                 "logo_dark": "brand/spine-logo-light.png",
                 "logo_alt": "SPINE",
                 "favicon": "brand/favicon.ico",

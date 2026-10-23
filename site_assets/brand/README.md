@@ -4,8 +4,11 @@
 from `spine/docs/source/_static/img/spine-logo-light.png`. Its orange is #EB7913.
 The source asset SHA-256 begins `2d179fee60e4`.
 
-The header badge and landing banner give it a charcoal background in both site
-themes. Keep the original proportions and colors; do not recolor the logo with CSS.
+`spine-logo-dark.png` is an unmodified copy of the black-letter wordmark from
+`spine/docs/source/_static/img/spine-logo-dark.png`. The filenames describe the
+lettering, not the site theme: light mode uses dark letters, and dark mode uses
+light letters. Both the navigation and landing banner follow the selected theme.
+Keep the original proportions and colors; do not recolor the logos with CSS.
 
 `favicon.ico` uses the artwork from
 `spine/docs/source/_static/img/favicon.ico`, the file selected by SPINE RTD

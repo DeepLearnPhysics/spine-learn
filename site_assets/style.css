@@ -131,7 +131,7 @@ a[href^="#"] {
     margin-right: 0;
     padding: 0;
     border-radius: 4px;
-    background: #191b1e;
+    background: transparent;
 }
 
 .myst-home-link-logo img[alt="SPINE"] {
@@ -155,8 +155,8 @@ a[href^="#"] {
     padding: 1.75rem 2rem;
     border-bottom: 3px solid var(--spine-orange);
     border-radius: 10px;
-    background: #191b1e;
-    color: #f2f3f4;
+    background: #f5f6f7;
+    color: #191b1e;
 }
 
 .spine-banner-logo {
@@ -172,12 +172,12 @@ a[href^="#"] {
 }
 
 .spine-banner p {
-    color: #d5d7da;
+    color: inherit;
     margin: 0.5rem 0 0;
 }
 
 .spine-banner strong {
-    color: #ffffff;
+    color: inherit;
     font-size: clamp(1.1rem, 2.5vw, 1.4rem);
     line-height: 1.35;
 }
@@ -407,3 +407,9 @@ article .myst-code {
     .lesson-actions { gap: 6px; }
     body:has(#orientation) .myst-fm-downloads-button::after { content: "Notebook"; }
 }
+
+/* Asset names describe lettering: dark letters on light, light letters on dark. */
+.spine-banner .spine-logo-for-dark { display: none; }
+.dark .spine-banner .spine-logo-for-light { display: none; }
+.dark .spine-banner .spine-logo-for-dark { display: block; }
+.dark .spine-banner { background: #191b1e; color: #f2f3f4; }

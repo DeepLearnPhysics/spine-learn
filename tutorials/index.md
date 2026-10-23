@@ -9,14 +9,21 @@ site:
 ::::{div}
 :class: spine-banner
 
-:::{image} brand/spine-logo-light.png
+:::{image} brand/spine-logo-dark.png
 :alt: SPINE — Scalable Particle Imaging with Neural Embeddings
-:class: spine-banner-logo
+:class: spine-banner-logo spine-logo-for-light
 :width: 280px
 :align: left
 :::
 
-**Read it. Run it. Reason about it.**
+:::{image} brand/spine-logo-light.png
+:alt: SPINE — Scalable Particle Imaging with Neural Embeddings
+:class: spine-banner-logo spine-logo-for-dark
+:width: 280px
+:align: left
+:::
+
+**Read it. Run it. Ask about it. Reason about it.**
 
 Living tutorials for particle reconstruction and analysis.
 ::::
