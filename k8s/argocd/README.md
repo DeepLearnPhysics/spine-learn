@@ -7,6 +7,14 @@ spinal-tap has a separate, disabled project and is not yet managed by Argo.
 
 ## Release behavior
 
+Release-cycle transition: the installed configuration below still describes the
+live `main` channel. The repository workflow now prepares release-only
+publication; it will no longer advance `main` once merged. Follow
+[the first-release procedure](../../RELEASE.md#one-time-s3df-channel-transition)
+to publish `v0.1.0` and review switching Argo to the `release` channel. The
+prepared `applications/spine-learn-release.yaml.example` is not yet applied.
+
+
 A successful **Narrated site** build publishes the tested application image and
 an OCI deployment bundle. CI promotes the bundle's `main` tag only when that
 commit is still the repository's main head. Argo polls that promoted tag and

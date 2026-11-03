@@ -65,11 +65,15 @@ def test_local_api_boundaries(tmp_path: Path) -> None:
             response.read()
             answer.assert_not_called()
 
+            # Oversized requests are rejected before reading the body. Sending
+            # it can race the 413 connection close and cause a client broken pipe.
             connection.request(
                 "POST",
                 "/api/tutor/chat",
-                body="x" * 65537,
-                headers={"Content-Type": "application/json"},
+                headers={
+                    "Content-Type": "application/json",
+                    "Content-Length": "65537",
+                },
             )
             response = connection.getresponse()
             assert response.status == 413

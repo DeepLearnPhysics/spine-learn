@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: spine-learn
+  namespace: argocd
+spec:
+  destination:
+    namespace: spine-learn
+    server: https://kubernetes.default.svc
+  ignoreDifferences:
+  - group: gateway.networking.k8s.io
+    jsonPointers:
+    - /spec/parentRefs
+    kind: HTTPRoute
+    name: spine-learn
+  project: spine-learn
+  source:
+    kustomize:
+      patches:
+      - patch: |
+          apiVersion: gateway.networking.k8s.io/v1
+          kind: HTTPRoute
+          metadata:
+            name: spine-learn
+            annotations:
+              argocd.argoproj.io/ignore-healthcheck: "true"
+        target:
+          group: gateway.networking.k8s.io
+          kind: HTTPRoute
+          name: spine-learn
+          version: v1
+    path: .
+    repoURL: oci://ghcr.io/deeplearnphysics/spine-learn-deploy
+    targetRevision: release
+  syncPolicy:
+    automated:
+      allowEmpty: false
+      enabled: true
+      prune: false
+      selfHeal: true
+    syncOptions:
+    - FailOnSharedResource=true
+    - RespectIgnoreDifferences=true

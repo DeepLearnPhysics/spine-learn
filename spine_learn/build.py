@@ -23,6 +23,7 @@ from nbformat import NotebookNode
 from .models import NarrationChunk, NarrationDocument
 from .narration import ROOT, SOURCE, current_audio, load_inputs
 from .static_figure import STATIC_FIGURE, STATIC_URL, render_static_event
+from .version import version_notice
 
 BUILD = ROOT / "_build"
 NOTEBOOK_PATH = BUILD / "notebooks/01_points_particles_interactions.ipynb"
@@ -313,12 +314,16 @@ def _add_guided_sections(
             )
             break
 
+    website.cells.append(nbformat.v4.new_markdown_cell(version_notice()))
     return website
 
 
 def _write_site_configuration(site: Path) -> None:
     """Copy the landing page and styles, then write MyST's build configuration."""
-    shutil.copy(ROOT / "tutorials/index.md", site / "index.md")
+    (site / "index.md").write_text(
+        (ROOT / "tutorials/index.md").read_text(encoding="utf-8") + version_notice(),
+        encoding="utf-8",
+    )
     shutil.copy(ROOT / "site_assets/style.css", site / "style.css")
     shutil.copy(ROOT / "site_assets/narration.js", site / "narration.js")
     shutil.copytree(ROOT / "site_assets/brand", site / "brand", dirs_exist_ok=True)

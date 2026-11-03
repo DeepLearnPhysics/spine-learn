@@ -6,6 +6,13 @@ using the `neutrino-ml` context. The local Mac need not have a kubeconfig.
 
 ## Update the deployed application
 
+The repository is transitioning to published stable releases; see
+[the release procedure](../RELEASE.md). The installed Argo Application still
+follows `main` until the first release and reviewed channel switch. The workflow
+changes stop promoting development builds to that existing channel once merged.
+The description below records the currently installed deployment behavior.
+
+
 SPINE Learn is managed by self-hosted Argo CD in the `neutrino-ml` vcluster.
 Successful Narrated site builds publish a tested deployment bundle; CI promotes
 its `main` channel only while the commit is still the repository main head.

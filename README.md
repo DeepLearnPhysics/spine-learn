@@ -384,17 +384,27 @@ source. Pale backgrounds and darker text colors are derived from it; the darker
 orange keeps small links readable on white. Run `make site` and refresh the
 preview after editing the stylesheet.
 
+## Versions and releases
+
+The first SPINE Learn release target is **v0.1.0**. Notable changes are maintained
+in [CHANGELOG.md](CHANGELOG.md), following SPINE's changelog style. See
+[the release procedure](RELEASE.md) for versioning, review, and publication.
+
+`VERSION` is the single source for the release number. The homepage and lesson
+show that version and a changelog link. Development builds carry a `-dev` suffix;
+published stable release builds display the exact validated release tag.
+
 ## S3DF hosting and automated releases
 
-The production serving layer, public HTTPRoute, and manual rollout/update
-instructions are documented in [k8s/README.md](k8s/README.md). GitHub Actions
-publishes a tested application image and a digest-pinned deployment bundle;
-cluster access and the Gemini Secret remain on S3DF.
+Self-managed Argo CD runs inside the existing `neutrino-ml` vcluster. CI tests
+containers and publishes digest-pinned deployment bundles; Kubernetes access and
+the Gemini Secret remain on S3DF. See [operations](k8s/argocd/README.md).
 
-The intended automation is **Argo CD provisioned by the S3DF platform team** in
-the existing vcluster. Application configuration and release-source integration
-are pending; deployments currently use the manual update procedure. The local
-`make tutor` preview remains available independently.
+The release workflow promotes only published stable GitHub Releases to an OCI
+`release` channel. Main-branch builds and GitHub Pages are development previews.
+The live Application still follows the existing `main` channel until the
+[first-release transition](RELEASE.md#one-time-s3df-channel-transition) is reviewed
+and completed. `make tutor` remains available independently for local previews.
 
 ## License
 

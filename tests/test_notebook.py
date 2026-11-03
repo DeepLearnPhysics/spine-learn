@@ -29,6 +29,9 @@ def test_companion_keeps_notebook_portable(tmp_path: Path) -> None:
     website = _add_guided_sections(notebook, document, "/spine-learn")
     original = "\n".join(cell.source for cell in notebook.cells)
     rendered = "\n".join(cell.source for cell in website.cells)
+    assert "SPINE Learn **" not in original
+    assert "SPINE Learn **" in rendered
+    assert "CHANGELOG.md" in rendered
     assert "tutor/index.html" not in original
     assert rendered.count("/spine-learn/tutor/index.html") == 1
     assert rendered.index("tutor/index.html") < rendered.index("(orientation)=")

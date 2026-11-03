@@ -8,22 +8,31 @@ on:
         default: false
   push:
     branches: [main]
+  release:
+    types: [published]
 permissions:
   contents: read
 concurrency:
-  group: narrated-site-${{ github.ref }}
+  group: narrated-site-${{ github.event_name == 'release' && 'release' || github.ref }}
   cancel-in-progress: false
 jobs:
   build:
+    if: github.event_name != 'release' || !github.event.release.prerelease
     runs-on: ubuntu-latest
+    env:
+      SPINE_LEARN_RELEASE: ${{ github.event_name == 'release' && github.event.release.tag_name || '' }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
           cache: pip
       - run: python -m venv .venv
       - run: .venv/bin/pip install -r requirements-dev.txt
+      - name: Validate site version and release notes
+        run: .venv/bin/python -m spine_learn.version
       - uses: actions/cache@v4
         with:
           path: |
@@ -61,7 +70,7 @@ jobs:
           name: s3df-site
           path: _build/site/_build/html
   publish-s3df:
-    if: github.ref == 'refs/heads/main'
+    if: github.event_name == 'release' && !github.event.release.prerelease
     needs: build
     runs-on: ubuntu-latest
     permissions:
@@ -69,6 +78,8 @@ jobs:
       packages: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
       - uses: actions/download-artifact@v4
         with:
           name: s3df-site
@@ -115,21 +126,25 @@ jobs:
       - name: Publish versioned deployment artifact
         env:
           REVISION: ${{ github.sha }}
+          RELEASE: ${{ github.event.release.tag_name }}
         run: |
           flux push artifact "oci://ghcr.io/deeplearnphysics/spine-learn-deploy:sha-$REVISION" \
             --path=_build/s3df-release \
             --source=https://github.com/DeepLearnPhysics/spine-learn \
-            --revision="main@sha1:$REVISION"
-      - name: Promote only the current main revision for automatic deployment
+            --revision="$RELEASE@sha1:$REVISION"
+      - name: Promote only the latest published stable release
         env:
           REVISION: ${{ github.sha }}
+          RELEASE: ${{ github.event.release.tag_name }}
+          RELEASE_ID: ${{ github.event.release.id }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          current=$(gh api repos/DeepLearnPhysics/spine-learn/commits/main --jq .sha)
-          if [ "$current" = "$REVISION" ]; then
-            flux tag artifact "oci://ghcr.io/deeplearnphysics/spine-learn-deploy:sha-$REVISION" --tag main
+          flux tag artifact "oci://ghcr.io/deeplearnphysics/spine-learn-deploy:sha-$REVISION" --tag "$RELEASE"
+          latest=$(gh api repos/DeepLearnPhysics/spine-learn/releases/latest --jq .id)
+          if [ "$latest" = "$RELEASE_ID" ]; then
+            flux tag artifact "oci://ghcr.io/deeplearnphysics/spine-learn-deploy:sha-$REVISION" --tag release
           else
-            echo "A newer commit is on main; keep this release available without promoting it."
+            echo "A different release is latest; do not advance the deployment channel."
           fi
   deploy:
     if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || inputs.deploy)
