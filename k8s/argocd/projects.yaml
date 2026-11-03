@@ -1,0 +1,49 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: spine-learn
+  namespace: argocd
+spec:
+  clusterResourceWhitelist: []
+  destinations:
+  - namespace: spine-learn
+    server: https://kubernetes.default.svc
+  namespaceResourceWhitelist:
+  - group: apps
+    kind: Deployment
+  - group: ''
+    kind: Service
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+  sourceRepos:
+  - oci://ghcr.io/deeplearnphysics/spine-learn-deploy
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: spinal-tap
+  namespace: argocd
+spec:
+  clusterResourceWhitelist: []
+  destinations: []
+  namespaceResourceWhitelist:
+  - group: apps
+    kind: Deployment
+  - group: ''
+    kind: Service
+  - group: gateway.networking.k8s.io
+    kind: HTTPRoute
+  sourceRepos: []
+---
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: default
+  namespace: argocd
+spec:
+  clusterResourceWhitelist: []
+  destinations: []
+  namespaceResourceBlacklist:
+  - group: '*'
+    kind: '*'
+  sourceRepos: []

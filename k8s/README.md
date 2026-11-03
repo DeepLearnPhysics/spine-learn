@@ -4,47 +4,20 @@ The application serves the website and `/api/tutor/*` on one origin:
 `https://spine-learn.slac.stanford.edu`. Deploy from an authenticated S3DF session
 using the `neutrino-ml` context. The local Mac need not have a kubeconfig.
 
-## Update an existing deployment
+## Update the deployed application
 
-For routine updates, reuse the existing namespace, Gemini Secret, Service, and
-HTTPRoute. Complete [GitHub CLI setup](#github-cli-setup-on-s3df) if this shell is
-not authenticated, then select the successful release you want to deploy:
+SPINE Learn is managed by self-hosted Argo CD in the `neutrino-ml` vcluster.
+Successful Narrated site builds publish a tested deployment bundle; CI promotes
+its `main` channel only while the commit is still the repository main head.
+Argo CD follows that channel and deploys it automatically, with self-heal enabled
+and pruning disabled. No routine manual deployment approval is required.
+The current workflow publishes successful builds on `main`, not GitHub Releases
+or Git tags.
 
-```bash
-gh run list --repo DeepLearnPhysics/spine-learn \
-  --workflow narration.yml --branch main --status success --limit 5
-```
-
-Use the **ID** column for the intended commit. Wait for the `publish-s3df` job to
-succeed and provide `s3df-release`; a successful validation job alone is not a
-release. Download into a fresh directory to avoid mixing releases:
-
-```bash
-read -r -p "Successful Narrated site run ID: " run_id
-release_dir=$(mktemp -d /tmp/spine-learn-release.XXXXXX)
-gh run download "$run_id" --repo DeepLearnPhysics/spine-learn \
-  --name s3df-release --dir "$release_dir"
-```
-
-After a successful download, these are the deployment commands:
-
-```bash
-kubectl --context neutrino-ml apply -k "$release_dir"
-kubectl --context neutrino-ml -n spine-learn rollout status deployment/spine-learn --timeout=180s
-kubectl --context neutrino-ml -n spine-learn get pods
-curl --fail https://spine-learn.slac.stanford.edu/readyz
-```
-
-The new image digest triggers the rollout; no separate `rollout restart` is
-needed. Do not recreate the namespace or Gemini Secret. The single-replica
-`Recreate` strategy causes a brief interruption. After rollout, refresh the
-lesson and check playback, notebook download, and one chat response. If you used
-temporary GitHub authentication, [clean it up](#remove-temporary-github-authentication).
-To roll back manually, repeat these steps with an earlier successful run.
-
-These instructions apply while releases are deployed manually. If a GitOps
-controller is later enabled, update its desired release instead of applying a
-competing manual version.
+See [Argo CD operations](argocd/README.md) for private UI access, verification,
+pausing automation, and rollback. Do not apply a competing release with kubectl
+while automatic sync remains enabled. The manual first-rollout instructions
+below are retained for bootstrap/recovery with Argo paused.
 
 ## Release flow
 
@@ -59,9 +32,8 @@ competing manual version.
 5. CI publishes the same manifests to
    `ghcr.io/deeplearnphysics/spine-learn-deploy:sha-COMMIT`. It promotes the
    deployment artifact's `main` tag only if that commit is still GitHub's main head.
-6. Until the planned S3DF-managed Argo CD integration is configured, download
-   `s3df-release` and apply it manually using the update instructions above.
-   No cluster credential or Gemini key is stored in GitHub Actions.
+6. Argo CD follows the promoted OCI `main` bundle and automatically syncs it to
+   S3DF. No cluster credential or Gemini key is stored in GitHub Actions.
 
 The first publication requires GitHub Actions package-write permission. Make
 the application image package public so S3DF can pull anonymously, or configure
@@ -72,8 +44,8 @@ if it is selected as the Argo CD release source.
 
 CI currently uses the Flux CLI to publish the OCI deployment artifact. This is
 an artifact-packaging step, not a Flux installation or an active deployment
-controller. The publishing approach will be finalized once S3DF confirms the
-release source for Argo CD.
+controller. The proposed Argo CD integration reuses this bundle with an explicit media-type
+configuration and an immutable artifact digest, subject to validation.
 
 ## GitHub CLI setup on S3DF
 
@@ -195,36 +167,30 @@ Open `/lesson`, check audio seeking and notebook download, and send one chat
 question. The status and readiness checks do not consume Gemini requests;
 **Check connection** and chat do. Keep the API key out of screenshots/logs.
 
-## Planned automation with S3DF-managed Argo CD
+## Self-managed Argo CD in neutrino-ml
 
-The intended deployment controller is **Argo CD**, provisioned and maintained by
-the S3DF platform team in the existing vcluster. The project maintainers will
-configure which applications and releases it manages. Manual deployments remain
-the supported procedure until that integration is ready.
+Argo CD v3.5.6 is installed and verified in namespace `argocd`. Maintainers operate
+it, with SLAC IT assistance for platform matters and possible Vault integration.
+SPINE Learn uses automatic sync; spinal-tap remains outside Argo management with
+its own disabled project reserved for later onboarding.
 
-Before enabling automatic deployment, agree with the platform team on:
+See [the deployment and operations README](argocd/README.md) for the scoped
+configuration, private access, CI release channel, health limitations, and tested
+rollback procedure. Initial adoption, rollback to the previous successful build,
+and automatic roll-forward were verified on 2026-11-02.
 
-- The Argo CD instance, access, and application/project permissions.
-- The supported release source: the published OCI deployment bundle or a Git
-  location containing rendered manifests with a tested image digest. Do not
-  point Argo CD directly at `k8s/base`, which contains a placeholder image.
-- Application scope for SPINE Learn and, separately, spinal-tap, so the shared
-  infrastructure can support both without coupling their releases.
-- Sync approval, pruning, health checks, and the procedure for pausing updates
-  or selecting an earlier release.
-
-The Gemini Secret remains provisioned separately in Kubernetes. Release manifests
-must not include its value, and application pruning must not remove it. No Argo CD
-Application manifests are supplied yet; the source integration and permissions
-must be confirmed before documenting executable setup commands.
+Gemini credentials remain separately managed Kubernetes Secrets. Application
+permissions exclude Secret and Namespace management; pruning is disabled. The
+HTTPRoute has no status exposed in this vcluster, so its aggregate Argo health
+check is excluded. External readiness checks remain necessary.
 
 ### Rollback
 
-For the current manual deployment, download an earlier successful run's
-`s3df-release` into a fresh directory and follow **Update an existing deployment**.
-Once Argo CD manages the application, select the earlier release through its
-configured source and sync workflow. A manual `kubectl` change alone is not a
-lasting rollback if the controller still targets the newer release.
+Pause Argo automatic sync, select an earlier validated OCI bundle digest, then
+sync without pruning. Verify workload and external readiness before resuming.
+Follow the exact commands and caveats in [Argo CD operations](argocd/README.md#pause-and-rollback).
+A kubectl-only rollback will be reverted by self-heal if Argo still targets the
+newer release.
 
 ## Runtime scope
 

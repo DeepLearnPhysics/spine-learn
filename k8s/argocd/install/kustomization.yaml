@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: argocd
+patches:
+- path: argocd-application-controller-patch.yaml
+- path: argocd-repo-server-patch.yaml
+- path: argocd-server-patch.yaml
+- path: argocd-redis-patch.yaml
+- path: argocd-dex-server-patch.yaml
+- path: argocd-applicationset-controller-patch.yaml
+- path: argocd-notifications-controller-patch.yaml
+- path: argocd-cm-patch.yaml
+- path: argocd-rbac-cm-patch.yaml
+resources:
+- vendor/namespace-install-v3.5.6.yaml
+- local-cluster.yaml
