@@ -3,7 +3,8 @@
 Argo CD **v3.5.6** runs in namespace `argocd` inside the existing `neutrino-ml`
 vcluster. Maintainers operate it; SLAC IT assists with platform matters and
 potential future Vault integration. SPINE Learn is managed automatically.
-spinal-tap has a separate, disabled project and is not yet managed by Argo.
+spinal-tap is managed as a separate Application, with its own LArCV release
+channel and scoped namespace permissions. See [spinal-tap operations](https://github.com/DeepLearnPhysics/spinal-tap/blob/main/k8s/argocd/README.md).
 
 ## Release behavior
 
@@ -143,13 +144,16 @@ self-managed, so editing these files alone does not update its installation.
 - `install/vendor/SHA256SUMS`: downloaded upstream file checksum for reproducibility,
   not independent publisher signature verification.
 - `install/local-cluster.yaml`: Secret-shaped non-sensitive cluster configuration,
-  no token. Controller authentication uses its Kubernetes service account.
+  no token. Discovery covers `spine-learn,spinal-tap`; controller authentication
+  uses its Kubernetes service account.
 - `spine-learn-rbac.yaml`: workload writes and health reads confined to the
   application namespace; no Secret, RBAC, namespace, exec, or delete grant there.
-- `projects.yaml`: restricted SPINE Learn project, denied default project, and
-  disabled spinal-tap project. spinal-tap has no controller namespace permissions.
-- `applications/spine-learn.yaml.example`: pinned adoption/reference configuration;
-  `spinal-tap.yaml.example`: inactive onboarding template requiring separate review.
+- `projects.yaml`: separate restricted SPINE Learn and spinal-tap projects,
+  plus a denied default project. spinal-tap namespace RBAC and its active
+  Application are owned by the spinal-tap repository.
+- `applications/spine-learn.yaml.example`: pinned SPINE Learn adoption/reference
+  configuration. spinal-tap owns its active Application configuration in its
+  own repository; the earlier inactive template was removed.
 
 Argo's own namespace retains upstream runtime permissions to operate credentials.
 Application workload write access can indirectly use application credentials, so

@@ -172,9 +172,9 @@ question. The status and readiness checks do not consume Gemini requests;
 
 Argo CD v3.5.6 is installed and verified in namespace `argocd`. Maintainers operate
 it, with SLAC IT assistance for platform matters and possible Vault integration.
-SPINE Learn follows the stable-release channel with automatic sync; spinal-tap
-remains outside Argo management with its own disabled project reserved for later
-onboarding.
+SPINE Learn follows its stable-release channel with automatic sync. spinal-tap
+is a separate managed Application following its LArCV release channel, with
+[its own operations guide](https://github.com/DeepLearnPhysics/spinal-tap/blob/main/k8s/argocd/README.md).
 
 See [the deployment and operations README](argocd/README.md) for the scoped
 configuration, private access, CI release channel, health limitations, and tested
