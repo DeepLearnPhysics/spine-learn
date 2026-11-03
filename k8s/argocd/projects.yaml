@@ -25,15 +25,18 @@ metadata:
   namespace: argocd
 spec:
   clusterResourceWhitelist: []
-  destinations: []
+  destinations:
+  - namespace: spinal-tap
+    server: https://kubernetes.default.svc
   namespaceResourceWhitelist:
   - group: apps
     kind: Deployment
   - group: ''
     kind: Service
-  - group: gateway.networking.k8s.io
-    kind: HTTPRoute
-  sourceRepos: []
+  - group: networking.k8s.io
+    kind: Ingress
+  sourceRepos:
+  - oci://ghcr.io/deeplearnphysics/spinal-tap-deploy
 ---
 apiVersion: argoproj.io/v1alpha1
 kind: AppProject

@@ -8,6 +8,6 @@ stringData:
   clusterResources: 'false'
   config: '{}'
   name: neutrino-ml
-  namespaces: spine-learn
+  namespaces: spine-learn,spinal-tap
   server: https://kubernetes.default.svc
 type: Opaque
