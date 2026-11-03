@@ -386,8 +386,8 @@ preview after editing the stylesheet.
 
 ## Versions and releases
 
-The first SPINE Learn release target is **v0.1.0**. Notable changes are maintained
-in [CHANGELOG.md](CHANGELOG.md), following SPINE's changelog style. See
+The first SPINE Learn release is **v0.1.0**, the initial public prototype.
+Notable changes are maintained in [CHANGELOG.md](CHANGELOG.md), following SPINE's changelog style. See
 [the release procedure](RELEASE.md) for versioning, review, and publication.
 
 `VERSION` is the single source for the release number. The homepage and lesson
@@ -402,9 +402,9 @@ the Gemini Secret remain on S3DF. See [operations](k8s/argocd/README.md).
 
 The release workflow promotes only published stable GitHub Releases to an OCI
 `release` channel. Main-branch builds and GitHub Pages are development previews.
-The live Application still follows the existing `main` channel until the
-[first-release transition](RELEASE.md#one-time-s3df-channel-transition) is reviewed
-and completed. `make tutor` remains available independently for local previews.
+The live Application follows that `release` channel and deploys successful stable
+releases automatically. `make tutor` remains available independently for local
+previews.
 
 ## License
 

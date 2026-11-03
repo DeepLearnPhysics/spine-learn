@@ -7,28 +7,22 @@ spinal-tap has a separate, disabled project and is not yet managed by Argo.
 
 ## Release behavior
 
-Release-cycle transition: the installed configuration below still describes the
-live `main` channel. The repository workflow now prepares release-only
-publication; it will no longer advance `main` once merged. Follow
-[the first-release procedure](../../RELEASE.md#one-time-s3df-channel-transition)
-to publish `v0.1.0` and review switching Argo to the `release` channel. The
-prepared `applications/spine-learn-release.yaml.example` is not yet applied.
+Published stable GitHub Releases drive S3DF deployment. The **Narrated site**
+workflow validates the exact release tag and changelog, rebuilds the narrated
+site, tests the container, and publishes an OCI bundle pinned to its image digest.
+Only GitHub's latest stable release advances the bundle's `release` channel.
+Argo polls that channel and syncs automatically, including self-healing drift.
+No additional deployment approval is required for routine releases.
 
-
-A successful **Narrated site** build publishes the tested application image and
-an OCI deployment bundle. CI promotes the bundle's `main` tag only when that
-commit is still the repository's main head. Argo polls that promoted tag and
-syncs it automatically, including self-healing drift. No routine approval is
-required. A new release can take several minutes to be detected and rolled out.
-The application image inside every bundle is pinned by SHA-256 digest.
-
-The repository currently has no Git tags or GitHub Releases: this channel follows
-successful builds on `main`. Tagged-release-only promotion would require a CI
-change. Argo does not build the site or manage the Gemini key. Flux CLI only
-packages the OCI bundle; no Flux controller is installed.
+Main-branch and pull-request builds are development previews; they do not advance
+the production channel. Drafts, prereleases, and a tag push alone do not deploy.
+GitHub Pages remains a main-branch preview. A new successful release can take
+several minutes to be detected and rolled out. See [the release procedure](../../RELEASE.md).
+Argo does not build the site or manage the Gemini key. Flux CLI only packages the
+OCI bundle; no Flux controller is installed.
 
 The active configuration is [applications/spine-learn.yaml](applications/spine-learn.yaml).
-It uses `oci://ghcr.io/deeplearnphysics/spine-learn-deploy`, `targetRevision: main`,
+It uses `oci://ghcr.io/deeplearnphysics/spine-learn-deploy`, `targetRevision: release`,
 and `path: .`. The package is anonymously readable. The repo-server explicitly
 accepts Flux's `application/vnd.cncf.flux.content.v1.tar+gzip` layer type.
 Never point Argo at `k8s/base`, which contains a placeholder image.
@@ -122,7 +116,7 @@ digest, then Sync with pruning unchecked. Confirm Synced/Healthy, the running
 image and public endpoints. This holds the selected release until resumed.
 Keep the active configuration file aligned if this is a lasting rollback.
 
-To resume the successful-main channel after resolving the problem:
+To resume the stable-release channel after resolving the problem:
 
 ```bash
 kubectl --context neutrino-ml apply -f k8s/argocd/applications/spine-learn.yaml
@@ -174,13 +168,23 @@ rollback to the previous successful build, and automatic roll-forward to main.
 Rollback readiness and tutor status checks passed without making a Gemini call.
 The previous release used bundle
 `sha256:e7cca46b4b004ba27f1a70c2a063e9e535e220f36cea95dc94d50622b58c3ea0`.
-The restored current bundle was
+The restored initial adoption bundle was
 `sha256:7529012b9accb6da2bfba039238a94b2660f818694be423f2942b3fb324a36a4`,
 with image
 `ghcr.io/deeplearnphysics/spine-learn@sha256:3ef17cce22c68e196d0654cede2d049013caedee36adf822ba887d12e226ddc9`.
-The `main` channel can advance after this record. A newly published CI release
-has not been created solely for this test; automatic reconciliation was tested by
-returning the Application from the pinned prior release to the promoted channel.
+The first stable release **v0.1.0** was published on 2026-11-02 at commit
+`c6dce69c2efabfbff3f01c65f7b0a63e375744e9`. Its
+[release workflow](https://github.com/DeepLearnPhysics/spine-learn/actions/runs/41558069372)
+passed. The version and `release` OCI tags matched, and bundle files matched the
+CI `s3df-release` artifact byte for byte. The live Application was then switched
+to `release`, with automatic sync and self-heal enabled and pruning disabled.
+
+Release bundle: `sha256:72432f7b34b5c6a5194ef403b44217f9ed6959213ff65c66070486ef09995009`.
+Image: `ghcr.io/deeplearnphysics/spine-learn@sha256:9bd088393fce44c077721332f4d82376eea6e0efe8ab8bbc44f4e98ba9f080d7`.
+The channel can advance after this record. The live homepage and lesson display
+the release version and link to its tagged changelog. Workload health, public
+endpoints, executed notebook download and narration range requests were checked.
+One live tutor question also returned HTTP 200 with a nonempty answer.
 
 Do not recursively apply this directory. Reinstalling/upgrading Argo, enabling
 pruning, adding applications, and public/SSO access need their own review.

@@ -6,20 +6,13 @@ using the `neutrino-ml` context. The local Mac need not have a kubeconfig.
 
 ## Update the deployed application
 
-The repository is transitioning to published stable releases; see
-[the release procedure](../RELEASE.md). The installed Argo Application still
-follows `main` until the first release and reviewed channel switch. The workflow
-changes stop promoting development builds to that existing channel once merged.
-The description below records the currently installed deployment behavior.
-
-
 SPINE Learn is managed by self-hosted Argo CD in the `neutrino-ml` vcluster.
-Successful Narrated site builds publish a tested deployment bundle; CI promotes
-its `main` channel only while the commit is still the repository main head.
-Argo CD follows that channel and deploys it automatically, with self-heal enabled
-and pruning disabled. No routine manual deployment approval is required.
-The current workflow publishes successful builds on `main`, not GitHub Releases
-or Git tags.
+Publish a vetted stable GitHub Release following [the release procedure](../RELEASE.md).
+CI validates the tag and notes, builds and tests the container, and promotes its
+bundle to the OCI `release` channel only if that release is still GitHub's latest
+stable release. Argo follows that channel and deploys automatically, with
+self-heal enabled and pruning disabled. No additional manual approval is needed.
+Main-branch builds, drafts and prereleases do not advance production.
 
 See [Argo CD operations](argocd/README.md) for private UI access, verification,
 pausing automation, and rollback. Do not apply a competing release with kubectl
@@ -32,27 +25,28 @@ below are retained for bootstrap/recovery with Argo paused.
    synthesizes only changed narration. GitHub Pages keeps its `/spine-learn/` build.
 2. The workflow also builds the S3DF site with an empty `BASE_URL`, publishes it
    as the `s3df-site` artifact, and packages it with the matching tutor source.
-3. CI tests the container without a Gemini key, then publishes
+3. For published stable releases, CI tests the container without a Gemini key, then publishes
    `ghcr.io/deeplearnphysics/spine-learn:sha-COMMIT`.
 4. The `s3df-release` artifact contains a Deployment, Service, and HTTPRoute. The
    Deployment references the image by SHA-256 digest, not a mutable `latest` tag.
 5. CI publishes the same manifests to
-   `ghcr.io/deeplearnphysics/spine-learn-deploy:sha-COMMIT`. It promotes the
-   deployment artifact's `main` tag only if that commit is still GitHub's main head.
-6. Argo CD follows the promoted OCI `main` bundle and automatically syncs it to
+   `ghcr.io/deeplearnphysics/spine-learn-deploy:sha-COMMIT`. It gives the
+   bundle its version tag and promotes `release` only for the latest stable
+   GitHub Release.
+6. Argo CD follows the promoted OCI `release` bundle and automatically syncs it to
    S3DF. No cluster credential or Gemini key is stored in GitHub Actions.
 
 The first publication requires GitHub Actions package-write permission. Make
 the application image package public so S3DF can pull anonymously, or configure
 S3DF-approved registry pull credentials. Public source repositories do not
 guarantee public packages. Never use the Gemini Secret for registry authentication.
-Access to the separate deployment-artifact package will also need configuration
-if it is selected as the Argo CD release source.
+The image and deployment-artifact packages were anonymously readable during
+release verification; preserve that access or provision separate registry credentials.
 
 CI currently uses the Flux CLI to publish the OCI deployment artifact. This is
 an artifact-packaging step, not a Flux installation or an active deployment
-controller. The proposed Argo CD integration reuses this bundle with an explicit media-type
-configuration and an immutable artifact digest, subject to validation.
+controller. Argo CD reads this bundle with an explicit media-type configuration
+and resolves the stable-release channel to an immutable artifact digest.
 
 ## GitHub CLI setup on S3DF
 
@@ -111,7 +105,7 @@ commit you want to deploy. List recent successful runs:
 
 ```bash
 gh run list --repo DeepLearnPhysics/spine-learn \
-  --workflow narration.yml --branch main --status success --limit 5
+  --workflow narration.yml --event release --status success --limit 5
 ```
 
 Use the number in the **ID** column as `RUN_ID` below. You can also find it in
@@ -178,8 +172,9 @@ question. The status and readiness checks do not consume Gemini requests;
 
 Argo CD v3.5.6 is installed and verified in namespace `argocd`. Maintainers operate
 it, with SLAC IT assistance for platform matters and possible Vault integration.
-SPINE Learn uses automatic sync; spinal-tap remains outside Argo management with
-its own disabled project reserved for later onboarding.
+SPINE Learn follows the stable-release channel with automatic sync; spinal-tap
+remains outside Argo management with its own disabled project reserved for later
+onboarding.
 
 See [the deployment and operations README](argocd/README.md) for the scoped
 configuration, private access, CI release channel, health limitations, and tested

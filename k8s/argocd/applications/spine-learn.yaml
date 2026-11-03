@@ -31,7 +31,7 @@ spec:
           version: v1
     path: .
     repoURL: oci://ghcr.io/deeplearnphysics/spine-learn-deploy
-    targetRevision: main
+    targetRevision: release
   syncPolicy:
     automated:
       allowEmpty: false

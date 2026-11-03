@@ -1,6 +1,6 @@
 # SPINE Learn releases
 
-SPINE Learn's first release target is **v0.1.0 — Initial public prototype**.
+SPINE Learn's first release is **v0.1.0 — Initial public prototype**.
 Its version is independent of the SPINE library version used by the lesson.
 
 `VERSION` holds the intended stable version without the `v` prefix. Local, pull
@@ -38,27 +38,21 @@ automatic rollback or external HTTP monitor.
 
 ## One-time S3DF channel transition
 
-The installed Application still follows the last successful **main** OCI channel.
-The proposed workflow stops advancing that channel; the existing site remains
-served. Do not point Argo at `release` until the first release successfully
-publishes it, and do not apply the template with a `.example` suffix by accident.
+Completed on 2026-11-02 for `v0.1.0`. The versioned and `release` OCI tags were
+validated against the successful release workflow artifact before the live
+Application switched from `main` to `release`. The installed configuration is
+recorded in `k8s/argocd/applications/spine-learn.yaml`; the `.example` file retains
+the reviewed transition configuration.
 
-After the first release succeeds, inspect its bundle: exactly Deployment,
-Service and HTTPRoute in namespace `spine-learn`, with the tested image pinned
-by digest and no credentials. Review the channel switch, then apply the prepared
-`k8s/argocd/applications/spine-learn-release.yaml.example` and verify:
+Verification checks:
 
-- Argo resolves the `release` channel to the intended bundle and reports Synced
-  and Healthy, with automatic sync enabled and pruning disabled.
+- Argo resolves the release channel to the intended bundle, reports Synced and
+  Healthy, and records an automated sync.
 - The running pod image matches the published bundle.
-- Public `/readyz`, `/api/tutor/status`, homepage and lesson work; both pages show
-  `v0.1.0` and link to its changelog.
-- Audio, notebook download, and a deliberately chosen chat request work.
-
-Once verified, make `applications/spine-learn.yaml` record the live `release`
-source and update the Argo operations README. This transition changes deployed
-configuration and requires maintainer review. No live change is made merely by
-editing this repository.
+- Public readiness and tutor status succeed; homepage and lesson show `v0.1.0`
+  and link to its tagged changelog.
+- The executed notebook downloads and narration serves HTTP 206 byte ranges.
+- One live tutor question returns HTTP 200 with a nonempty answer.
 
 For later releases, publication and successful CI promotion deploy automatically.
 For rollback, pause automatic sync and select the earlier immutable OCI bundle
